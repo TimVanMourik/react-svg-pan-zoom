@@ -14,6 +14,8 @@ import {
  * @returns {Object}
  */
 export function getDefaultValue(viewerWidth, viewerHeight, SVGWidth, SVGHeight, SVGX = 0, SVGY = 0, scaleFactorMin, scaleFactorMax) {
+  console.log({SVGX, SVGY});
+  debugger
   return set({}, {
     ...identity(),
     version: 2,
