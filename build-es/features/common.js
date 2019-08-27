@@ -22,10 +22,10 @@ export function getDefaultValue(viewerWidth, viewerHeight, SVGViewBoxX, SVGViewB
     prePinchMode: null,
     viewerWidth: viewerWidth,
     viewerHeight: viewerHeight,
-    SVGWidth: SVGWidth,
-    SVGHeight: SVGHeight,
     SVGViewBoxX: SVGViewBoxX,
     SVGViewBoxY: SVGViewBoxY,
+    SVGWidth: SVGWidth,
+    SVGHeight: SVGHeight,
     scaleFactorMin: scaleFactorMin,
     scaleFactorMax: scaleFactorMax,
     startX: null,
@@ -118,19 +118,19 @@ export function setViewerSize(value, viewerWidth, viewerHeight) {
 /**
  *
  * @param value
- * @param SVGWidth
- * @param SVGHeight
  * @param SVGViewBoxX
  * @param SVGViewBoxY
+ * @param SVGWidth
+ * @param SVGHeight
  * @returns {Object}
  */
 
 export function setSVGViewBox(value, SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight) {
   return set(value, {
-    SVGWidth: SVGWidth,
-    SVGHeight: SVGHeight,
     SVGViewBoxX: SVGViewBoxX,
-    SVGViewBoxY: SVGViewBoxY
+    SVGViewBoxY: SVGViewBoxY,
+    SVGWidth: SVGWidth,
+    SVGHeight: SVGHeight
   });
 }
 /**

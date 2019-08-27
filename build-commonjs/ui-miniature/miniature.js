@@ -43,10 +43,10 @@ function Miniature(props) {
       SVGBackground = props.SVGBackground,
       miniatureWidth = props.width,
       miniatureHeight = props.height;
-  var SVGWidth = value.SVGWidth,
-      SVGHeight = value.SVGHeight,
-      SVGViewBoxX = value.SVGViewBoxX,
+  var SVGViewBoxX = value.SVGViewBoxX,
       SVGViewBoxY = value.SVGViewBoxY,
+      SVGWidth = value.SVGWidth,
+      SVGHeight = value.SVGHeight,
       viewerWidth = value.viewerWidth,
       viewerHeight = value.viewerHeight;
   var ratio = SVGHeight / SVGWidth;
@@ -86,7 +86,7 @@ function Miniature(props) {
     height: height + "px",
     bottom: "6px"
   }, _defineProperty(_style, position === _constants.POSITION_LEFT ? 'left' : 'right', "6px"), _defineProperty(_style, "background", background), _style);
-  var centerTranslation = ratio >= 1 ? "translate(".concat((miniatureWidth / 2 - SVGWidth / 2 + SVGViewBoxX) * zoomToFit, ", ").concat(-SVGViewBoxY * zoomToFit, ")") : "translate(".concat(-SVGViewBoxX * zoomToFit, ", ").concat((miniatureHeight / 2 - SVGHeight / 2 + SVGViewBoxY) * zoomToFit, ")");
+  var centerTranslation = ratio >= 1 ? "translate(".concat((miniatureWidth - SVGWidth * zoomToFit) / 2 - SVGViewBoxX * zoomToFit, ", ").concat(-SVGViewBoxY * zoomToFit, ")") : "translate(".concat(-SVGViewBoxX * zoomToFit, ", ").concat((miniatureHeight - SVGHeight * zoomToFit) / 2 - SVGViewBoxY * zoomToFit, ")");
   return _react.default.createElement("div", {
     role: "navigation",
     style: style
@@ -102,10 +102,10 @@ function Miniature(props) {
     transform: "scale(".concat(zoomToFit, ", ").concat(zoomToFit, ")")
   }, _react.default.createElement("rect", {
     fill: SVGBackground,
-    x: value.SVGViewBoxX,
-    y: value.SVGViewBoxY,
-    width: value.SVGWidth,
-    height: value.SVGHeight
+    x: SVGViewBoxX,
+    y: SVGViewBoxY,
+    width: SVGWidth,
+    height: SVGHeight
   }), children, _react.default.createElement(_miniatureMask.default, {
     SVGWidth: SVGWidth,
     SVGHeight: SVGHeight,

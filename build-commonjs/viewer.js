@@ -93,21 +93,23 @@ function (_React$Component) {
         scaleFactorMin = props.scaleFactorMin,
         scaleFactorMax = props.scaleFactorMax,
         children = props.children;
-    var _children$props = children.props,
-        SVGWidth = _children$props.width,
-        SVGHeight = _children$props.height,
-        SVGViewBox = _children$props.viewBox;
-    var SVGViewBoxX, SVGViewBoxY;
+    var SVGViewBox = children.props.withViewBox;
+    var defaultValue;
 
     if (SVGViewBox) {
-      var _SVGViewBox$split$map = SVGViewBox.split(' ').map(parseFloat);
+      var _SVGViewBox$split$map = SVGViewBox.split(' ').map(parseFloat),
+          _SVGViewBox$split$map2 = _slicedToArray(_SVGViewBox$split$map, 4),
+          SVGViewBoxX = _SVGViewBox$split$map2[0],
+          SVGViewBoxY = _SVGViewBox$split$map2[1],
+          SVGWidth = _SVGViewBox$split$map2[2],
+          SVGHeight = _SVGViewBox$split$map2[3];
 
-      var _SVGViewBox$split$map2 = _slicedToArray(_SVGViewBox$split$map, 4);
-
-      SVGViewBoxX = _SVGViewBox$split$map2[0];
-      SVGViewBoxY = _SVGViewBox$split$map2[1];
-      SVGWidth = _SVGViewBox$split$map2[2];
-      SVGHeight = _SVGViewBox$split$map2[3];
+      defaultValue = (0, _common.getDefaultValue)(viewerWidth, viewerHeight, SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight, scaleFactorMin, scaleFactorMax);
+    } else {
+      var _children$props = children.props,
+          _SVGWidth = _children$props.width,
+          _SVGHeight = _children$props.height;
+      defaultValue = (0, _common.getDefaultValue)(viewerWidth, viewerHeight, 0, 0, _SVGWidth, _SVGHeight, scaleFactorMin, scaleFactorMax);
     }
 
     _this = _possibleConstructorReturn(this, _getPrototypeOf(ReactSVGPanZoom).call(this, props, context));
@@ -115,7 +117,7 @@ function (_React$Component) {
     _this.state = {
       pointerX: null,
       pointerY: null,
-      defaultValue: (0, _common.getDefaultValue)(viewerWidth, viewerHeight, SVGViewBoxX || 0, SVGViewBoxY || 0, SVGWidth, SVGHeight, scaleFactorMin, scaleFactorMax)
+      defaultValue: defaultValue
     };
     _this.autoPanLoop = _this.autoPanLoop.bind(_assertThisInitialized(_this));
 
@@ -138,40 +140,42 @@ function (_React$Component) {
 
       if (process.env.NODE_ENV !== 'production') {
         (0, _migrationTips.printMigrationTipsRelatedToProps)(props);
-      }
+      } // This block checks the size of the SVG
+
+
+      var SVGViewBox = props.children.props.withViewBox;
+
+      if (SVGViewBox) {
+        // if the withViewBox prop is specified
+        var _SVGViewBox$split$map3 = SVGViewBox.split(' ').map(parseFloat),
+            _SVGViewBox$split$map4 = _slicedToArray(_SVGViewBox$split$map3, 4),
+            x = _SVGViewBox$split$map4[0],
+            y = _SVGViewBox$split$map4[1],
+            width = _SVGViewBox$split$map4[2],
+            height = _SVGViewBox$split$map4[3];
+
+        if (value.SVGViewBoxX !== x || value.SVGViewBoxY !== y || value.SVGWidth !== width || value.SVGHeight !== height) {
+          nextValue = (0, _common.setSVGViewBox)(nextValue, x, y, width, height);
+          needUpdate = true;
+        }
+      } else {
+        // if the width and height props are specified
+        var _props$children$props = props.children.props,
+            SVGWidth = _props$children$props.width,
+            SVGHeight = _props$children$props.height;
+
+        if (value.SVGWidth !== SVGWidth || value.SVGHeight !== SVGHeight) {
+          nextValue = (0, _common.setSVGViewBox)(nextValue, 0, 0, SVGWidth, SVGHeight);
+          needUpdate = true;
+        }
+      } // This block checks the size of the viewer
+
 
       if (prevProps.width !== props.width || prevProps.height !== props.height) {
         nextValue = (0, _common.setViewerSize)(nextValue, props.width, props.height);
         needUpdate = true;
-      }
+      } // This blocks checks the scale factors
 
-      var _props$children$props = props.children.props,
-          SVGWidth = _props$children$props.width,
-          SVGHeight = _props$children$props.height,
-          SVGViewBox = _props$children$props.viewBox;
-      var _prevProps$children$p = prevProps.children.props,
-          prevSVGWidth = _prevProps$children$p.width,
-          prevSVGHeight = _prevProps$children$p.height,
-          prevSVGViewBox = _prevProps$children$p.viewBox;
-
-      if (SVGViewBox) {
-        var _SVGViewBox$split$map3 = SVGViewBox.split(' ').map(parseFloat),
-            _SVGViewBox$split$map4 = _slicedToArray(_SVGViewBox$split$map3, 4),
-            x0 = _SVGViewBox$split$map4[0],
-            y0 = _SVGViewBox$split$map4[1],
-            width = _SVGViewBox$split$map4[2],
-            height = _SVGViewBox$split$map4[3];
-
-        if (value.SVGViewBoxX !== x0 || value.SVGViewBoxY !== y0 || value.SVGWidth !== width || value.SVGHeight !== height) {
-          nextValue = (0, _common.setSVGViewBox)(nextValue, x0, y0, width, height);
-          needUpdate = true;
-        }
-      } else {
-        if (prevSVGWidth !== SVGWidth || prevSVGHeight !== SVGHeight) {
-          nextValue = (0, _common.setSVGViewBox)(nextValue, 0, 0, SVGWidth, SVGHeight);
-          needUpdate = true;
-        }
-      }
 
       if (prevProps.scaleFactorMin !== props.scaleFactorMin || prevProps.scaleFactorMax !== props.scaleFactorMax) {
         nextValue = (0, _common.setZoomLevels)(nextValue, props.scaleFactorMin, props.scaleFactorMax);
@@ -458,8 +462,8 @@ function (_React$Component) {
       }, _react.default.createElement("rect", {
         fill: this.props.SVGBackground,
         style: this.props.SVGStyle,
-        x: value.SVGViewBoxX,
-        y: value.SVGViewBoxY,
+        x: value.SVGViewBoxX || 0,
+        y: value.SVGViewBoxY || 0,
         width: value.SVGWidth,
         height: value.SVGHeight
       }), _react.default.createElement("g", null, props.children.props.children)), !([_constants.TOOL_NONE, _constants.TOOL_AUTO].indexOf(tool) >= 0 && props.detectAutoPan && value.focus) ? null : _react.default.createElement("g", {
@@ -533,10 +537,10 @@ ReactSVGPanZoom.propTypes = {
     f: _propTypes.default.number.isRequired,
     viewerWidth: _propTypes.default.number.isRequired,
     viewerHeight: _propTypes.default.number.isRequired,
-    SVGWidth: _propTypes.default.number.isRequired,
-    SVGHeight: _propTypes.default.number.isRequired,
     SVGViewBoxX: _propTypes.default.number.isRequired,
     SVGViewBoxY: _propTypes.default.number.isRequired,
+    SVGWidth: _propTypes.default.number.isRequired,
+    SVGHeight: _propTypes.default.number.isRequired,
     startX: _propTypes.default.number,
     startY: _propTypes.default.number,
     endX: _propTypes.default.number,
@@ -659,8 +663,8 @@ ReactSVGPanZoom.propTypes = {
       return new Error('`' + componentName + '` ' + 'should have a single child of the following types: ' + ' `' + types.join('`, `') + '`.');
     }
 
-    if (!prop.props.hasOwnProperty('width') || !prop.props.hasOwnProperty('height')) {
-      return new Error('SVG should have props `width` and `height`');
+    if ((!prop.props.hasOwnProperty('width') || !prop.props.hasOwnProperty('height')) && !prop.props.hasOwnProperty('withViewBox')) {
+      return new Error('SVG should have props `width` and `height` or `withViewBox`');
     }
   }
 };
