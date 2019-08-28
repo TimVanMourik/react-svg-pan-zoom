@@ -98,8 +98,8 @@ export function fitSelection(value, selectionSVGPointX, selectionSVGPointY, sele
 export function fitToViewer(value, SVGAlignX=ALIGN_LEFT, SVGAlignY=ALIGN_TOP) {
   let {viewerWidth, viewerHeight, SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight} = value;
 
-  let scaleX = viewerWidth / SVGWidth;
-  let scaleY = viewerHeight / SVGHeight;
+  let scaleX = viewerWidth / SVGWidth / 2;
+  let scaleY = viewerHeight / SVGHeight / 2;
   let scaleLevel = Math.min(scaleX, scaleY);
 
   const scaleMatrix = scale(scaleLevel, scaleLevel);
@@ -122,8 +122,7 @@ export function fitToViewer(value, SVGAlignX=ALIGN_LEFT, SVGAlignY=ALIGN_TOP) {
         translateY = remainderY - SVGViewBoxY * scaleY / 2;
       break;
     }
-  }
-  else {
+  } else {
     //(2) match in height, meaning scaled SVGWidth <= viewerWidth
     let remainderX = viewerWidth - scaleY * SVGWidth;
     switch(SVGAlignX) {
@@ -140,7 +139,6 @@ export function fitToViewer(value, SVGAlignX=ALIGN_LEFT, SVGAlignY=ALIGN_TOP) {
   }
 
   const translationMatrix = translate(translateX, translateY);
-
   const matrix = transform(
     translationMatrix, //2
     scaleMatrix        //1
