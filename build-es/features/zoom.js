@@ -93,8 +93,8 @@ export function fitToViewer(value) {
       SVGViewBoxY = value.SVGViewBoxY,
       SVGWidth = value.SVGWidth,
       SVGHeight = value.SVGHeight;
-  var scaleX = viewerWidth / SVGWidth;
-  var scaleY = viewerHeight / SVGHeight;
+  var scaleX = viewerWidth / SVGWidth / 2;
+  var scaleY = viewerHeight / SVGHeight / 2;
   var scaleLevel = Math.min(scaleX, scaleY);
   var scaleMatrix = scale(scaleLevel, scaleLevel);
   var translateX = -SVGViewBoxX * scaleX / 2;
