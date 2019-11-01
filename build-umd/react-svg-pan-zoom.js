@@ -91,7 +91,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 16);
+/******/ 	return __webpack_require__(__webpack_require__.s = 17);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -110,7 +110,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__0__;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.INITIAL_VALUE = exports.ALIGN_BOTTOM = exports.ALIGN_TOP = exports.ALIGN_RIGHT = exports.ALIGN_LEFT = exports.ALIGN_CENTER = exports.ACTION_PAN = exports.ACTION_ZOOM = exports.POSITION_LEFT = exports.POSITION_BOTTOM = exports.POSITION_RIGHT = exports.POSITION_TOP = exports.POSITION_NONE = exports.TOOL_ZOOM_OUT = exports.TOOL_ZOOM_IN = exports.TOOL_PAN = exports.TOOL_NONE = exports.TOOL_AUTO = exports.MODE_ZOOMING = exports.MODE_PANNING = exports.MODE_IDLE = void 0;
+exports.INITIAL_VALUE = exports.NULL_POSITION = exports.ALIGN_BOTTOM = exports.ALIGN_TOP = exports.ALIGN_RIGHT = exports.ALIGN_LEFT = exports.ALIGN_CENTER = exports.ACTION_PAN = exports.ACTION_ZOOM = exports.POSITION_LEFT = exports.POSITION_BOTTOM = exports.POSITION_RIGHT = exports.POSITION_TOP = exports.POSITION_NONE = exports.TOOL_ZOOM_OUT = exports.TOOL_ZOOM_IN = exports.TOOL_PAN = exports.TOOL_NONE = exports.TOOL_AUTO = exports.MODE_ZOOMING = exports.MODE_PANNING = exports.MODE_IDLE = void 0;
 var MODE_IDLE = 'idle';
 exports.MODE_IDLE = MODE_IDLE;
 var MODE_PANNING = 'panning';
@@ -151,6 +151,11 @@ var ALIGN_TOP = 'top';
 exports.ALIGN_TOP = ALIGN_TOP;
 var ALIGN_BOTTOM = 'bottom';
 exports.ALIGN_BOTTOM = ALIGN_BOTTOM;
+var NULL_POSITION = {
+  x: null,
+  y: null
+};
+exports.NULL_POSITION = NULL_POSITION;
 var INITIAL_VALUE = {};
 exports.INITIAL_VALUE = INITIAL_VALUE;
 
@@ -170,15 +175,9 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__2__;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getDefaultValue = getDefaultValue;
-exports.set = set;
-exports.isValueValid = isValueValid;
 exports.getSVGPoint = getSVGPoint;
+exports.getCursorPosition = getCursorPosition;
 exports.decompose = decompose;
-exports.setFocus = setFocus;
-exports.setViewerSize = setViewerSize;
-exports.setSVGViewBox = setSVGViewBox;
-exports.setZoomLevels = setZoomLevels;
 exports.setPointOnViewerCenter = setPointOnViewerCenter;
 exports.reset = reset;
 exports.resetMode = resetMode;
@@ -187,92 +186,46 @@ var _constants = __webpack_require__(1);
 
 var _transformationMatrix = __webpack_require__(4);
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 /**
- * Obtain default value
- * @returns {Object}
+ * Export x,y coords relative to SVG
+ * @param x
+ * @param y
+ * @param matrix
+ * @returns {*|{x, y}|{x: number, y: number}}
  */
-function getDefaultValue(viewerWidth, viewerHeight, SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight, scaleFactorMin, scaleFactorMax) {
-  return set({}, _objectSpread({}, (0, _transformationMatrix.identity)(), {
-    version: 2,
-    mode: _constants.MODE_IDLE,
-    focus: false,
-    pinchPointDistance: null,
-    prePinchMode: null,
-    viewerWidth: viewerWidth,
-    viewerHeight: viewerHeight,
-    SVGViewBoxX: SVGViewBoxX,
-    SVGViewBoxY: SVGViewBoxY,
-    SVGWidth: SVGWidth,
-    SVGHeight: SVGHeight,
-    scaleFactorMin: scaleFactorMin,
-    scaleFactorMax: scaleFactorMax,
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null,
-    miniatureOpen: true,
-    lastAction: null
-  }));
-}
-/**
- * Change value
- * @param value
- * @param change
- * @param action
- * @returns {Object}
- */
-
-
-function set(value, change) {
-  var action = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-  value = Object.assign({}, value, change, {
-    lastAction: action
+function getSVGPoint(x, y) {
+  var matrix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : (0, _transformationMatrix.identity)();
+  return (0, _transformationMatrix.applyToPoint)((0, _transformationMatrix.inverse)(matrix), {
+    x: x,
+    y: y
   });
-  return Object.freeze(value);
-}
-/**
- * value valid check
- * @param value
- */
-
-
-function isValueValid(value) {
-  return value !== null && _typeof(value) === 'object' && value.hasOwnProperty('version');
 }
 /**
  * Export x,y coords relative to SVG
- * @param value
- * @param viewerX
- * @param viewerY
+ * @param event
+ * @param boundingRect
  * @returns {*|{x, y}|{x: number, y: number}}
  */
 
 
-function getSVGPoint(value, viewerX, viewerY) {
-  var matrix = (0, _transformationMatrix.fromObject)(value);
-  var inverseMatrix = (0, _transformationMatrix.inverse)(matrix);
-  return (0, _transformationMatrix.applyToPoint)(inverseMatrix, {
-    x: viewerX,
-    y: viewerY
-  });
+function getCursorPosition(event, boundingRect) {
+  var left = boundingRect.left,
+      top = boundingRect.top;
+  var x = event.clientX - Math.round(left);
+  var y = event.clientY - Math.round(top);
+  return {
+    x: x,
+    y: y
+  };
 }
 /**
- * Decompose matrix from value
- * @param value
+ * Decompose matrix to scale and translate
+ * @param matrix
  * @returns {{scaleFactor: number, translationX: number, translationY: number}}
  */
 
 
-function decompose(value) {
-  var matrix = (0, _transformationMatrix.fromObject)(value);
+function decompose(matrix) {
   return {
     scaleFactor: matrix.a,
     translationX: matrix.e,
@@ -280,70 +233,8 @@ function decompose(value) {
   };
 }
 /**
- *
- * @param value
- * @param focus
- * @returns {Object}
- */
-
-
-function setFocus(value, focus) {
-  return set(value, {
-    focus: focus
-  });
-}
-/**
- *
- * @param value
  * @param viewerWidth
  * @param viewerHeight
- * @returns {Object}
- */
-
-
-function setViewerSize(value, viewerWidth, viewerHeight) {
-  return set(value, {
-    viewerWidth: viewerWidth,
-    viewerHeight: viewerHeight
-  });
-}
-/**
- *
- * @param value
- * @param SVGViewBoxX
- * @param SVGViewBoxY
- * @param SVGWidth
- * @param SVGHeight
- * @returns {Object}
- */
-
-
-function setSVGViewBox(value, SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight) {
-  return set(value, {
-    SVGViewBoxX: SVGViewBoxX,
-    SVGViewBoxY: SVGViewBoxY,
-    SVGWidth: SVGWidth,
-    SVGHeight: SVGHeight
-  });
-}
-/**
- *
- * @param value
- * @param scaleFactorMin
- * @param scaleFactorMax
- * @returns {Object}
- */
-
-
-function setZoomLevels(value, scaleFactorMin, scaleFactorMax) {
-  return set(value, {
-    scaleFactorMin: scaleFactorMin,
-    scaleFactorMax: scaleFactorMax
-  });
-}
-/**
- *
- * @param value
  * @param SVGPointX
  * @param SVGPointY
  * @param zoomLevel
@@ -351,45 +242,41 @@ function setZoomLevels(value, scaleFactorMin, scaleFactorMax) {
  */
 
 
-function setPointOnViewerCenter(value, SVGPointX, SVGPointY, zoomLevel) {
-  var viewerWidth = value.viewerWidth,
-      viewerHeight = value.viewerHeight;
+function setPointOnViewerCenter(viewerWidth, viewerHeight, SVGPointX, SVGPointY, zoomLevel) {
   var matrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.translate)(-SVGPointX + viewerWidth / 2, -SVGPointY + viewerHeight / 2), //4
   (0, _transformationMatrix.translate)(SVGPointX, SVGPointY), //3
   (0, _transformationMatrix.scale)(zoomLevel, zoomLevel), //2
   (0, _transformationMatrix.translate)(-SVGPointX, -SVGPointY) //1
   );
-  return set(value, _objectSpread({
-    mode: _constants.MODE_IDLE
-  }, matrix));
-}
-/**
- *
- * @param value
- * @returns {Object}
- */
-
-
-function reset(value) {
-  return set(value, _objectSpread({
-    mode: _constants.MODE_IDLE
-  }, (0, _transformationMatrix.identity)()));
-}
-/**
- *
- * @param value
- * @returns {Object}
- */
-
-
-function resetMode(value) {
-  return set(value, {
+  return {
     mode: _constants.MODE_IDLE,
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null
-  });
+    matrix: matrix
+  };
+}
+/**
+ *
+ * @returns {Object}
+ */
+
+
+function reset() {
+  return {
+    mode: _constants.MODE_IDLE,
+    matrix: (0, _transformationMatrix.identity)()
+  };
+}
+/**
+ *
+ * @returns {Object}
+ */
+
+
+function resetMode() {
+  return {
+    mode: _constants.MODE_IDLE,
+    start: _constants.NULL_POSITION,
+    end: _constants.NULL_POSITION
+  };
 }
 
 /***/ }),
@@ -857,7 +744,7 @@ function fromTriangles (t1, t2) {
  *  { type: 'matrix', a:1, b:2, c:3, d:4, e:5, f:6 },
  *  { type: 'translate', tx: 10, ty: 20 },
  *  { type: 'scale', sx: 2, sy: 4 },
- *  { type: 'rotate', angle: 90, sx: 50, sy: 25 },
+ *  { type: 'rotate', angle: 90, cx: 50, cy: 25 },
  *  { type: 'skewX', angle: 45 },
  *  { type: 'skewY',  angle: 45 },
  *  { type: 'shear', shx: 10, shy: 20}
@@ -2476,7 +2363,7 @@ var _constants = __webpack_require__(1);
 
 var _common = __webpack_require__(3);
 
-var _calculateBox = _interopRequireDefault(__webpack_require__(12));
+var _calculateBox = _interopRequireDefault(__webpack_require__(13));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2486,100 +2373,95 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function lessThanScaleFactorMin(value, scaleFactor) {
-  return value.scaleFactorMin && value.d * scaleFactor <= value.scaleFactorMin;
+function lessThanScaleFactorMin(matrix, scaleFactor, scaleFactorMin) {
+  return scaleFactorMin && matrix.d * scaleFactor <= scaleFactorMin;
 }
 
-function moreThanScaleFactorMax(value, scaleFactor) {
-  return value.scaleFactorMax && value.d * scaleFactor >= value.scaleFactorMax;
+function moreThanScaleFactorMax(matrix, scaleFactor, scaleFactorMax) {
+  return scaleFactorMax && matrix.d * scaleFactor >= scaleFactorMax;
 }
 
-function isZoomLevelGoingOutOfBounds(value, scaleFactor) {
-  return lessThanScaleFactorMin(value, scaleFactor) && scaleFactor < 1 || moreThanScaleFactorMax(value, scaleFactor) && scaleFactor > 1;
+function isZoomLevelGoingOutOfBounds(matrix, scaleFactor, scaleFactorMin, scaleFactorMax) {
+  return lessThanScaleFactorMin(matrix, scaleFactor, scaleFactorMin) && scaleFactor < 1 || moreThanScaleFactorMax(matrix, scaleFactor, scaleFactorMax) && scaleFactor > 1;
 }
 
-function limitZoomLevel(value, matrix) {
+function limitZoomLevel(matrix, scaleFactorMin, scaleFactorMax) {
   var scaleLevel = matrix.a;
 
-  if (value.scaleFactorMin != null) {
+  if (scaleFactorMin != null) {
     // limit minimum zoom
-    scaleLevel = Math.max(scaleLevel, value.scaleFactorMin);
+    scaleLevel = Math.max(scaleLevel, scaleFactorMin);
   }
 
-  if (value.scaleFactorMax != null) {
+  if (scaleFactorMax != null) {
     // limit maximum zoom
-    scaleLevel = Math.min(scaleLevel, value.scaleFactorMax);
+    scaleLevel = Math.min(scaleLevel, scaleFactorMax);
   }
 
-  return (0, _common.set)(matrix, {
+  return _objectSpread({}, matrix, {
     a: scaleLevel,
     d: scaleLevel
   });
 }
 
-function zoom(value, SVGPointX, SVGPointY, scaleFactor) {
-  if (isZoomLevelGoingOutOfBounds(value, scaleFactor)) {
-    // Do not change translation and scale of value
-    return value;
+function zoom(matrix, SVGPoint, scaleFactor, scaleFactorMin, scaleFactorMax) {
+  if (isZoomLevelGoingOutOfBounds(matrix, scaleFactor, scaleFactorMin, scaleFactorMax)) {
+    return {
+      matrix: matrix
+    };
   }
 
-  var matrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.fromObject)(value), (0, _transformationMatrix.translate)(SVGPointX, SVGPointY), (0, _transformationMatrix.scale)(scaleFactor, scaleFactor), (0, _transformationMatrix.translate)(-SVGPointX, -SVGPointY));
-  return (0, _common.set)(value, _objectSpread({
-    mode: _constants.MODE_IDLE
-  }, limitZoomLevel(value, matrix), {
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null
-  }), _constants.ACTION_ZOOM);
+  var newMatrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.fromObject)(matrix), (0, _transformationMatrix.translate)(SVGPoint.x, SVGPoint.y), (0, _transformationMatrix.scale)(scaleFactor, scaleFactor), (0, _transformationMatrix.translate)(-SVGPoint.x, -SVGPoint.y));
+  return {
+    mode: _constants.MODE_IDLE,
+    matrix: limitZoomLevel(newMatrix, scaleFactorMin, scaleFactorMax),
+    start: _constants.NULL_POSITION,
+    end: _constants.NULL_POSITION,
+    last_action: _constants.ACTION_ZOOM
+  };
 }
 
-function fitSelection(value, selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight) {
-  var viewerWidth = value.viewerWidth,
-      viewerHeight = value.viewerHeight;
+function fitSelection(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight, viewerWidth, viewerHeight) {
   var scaleX = viewerWidth / selectionWidth;
   var scaleY = viewerHeight / selectionHeight;
   var scaleLevel = Math.min(scaleX, scaleY);
-  var matrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.scale)(scaleLevel, scaleLevel), //2
+  var newMatrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.scale)(scaleLevel, scaleLevel), //2
   (0, _transformationMatrix.translate)(-selectionSVGPointX, -selectionSVGPointY) //1
   );
 
-  if (isZoomLevelGoingOutOfBounds(value, scaleLevel / value.d)) {
+  if (isZoomLevelGoingOutOfBounds(scaleLevel / newMatrix.d)) {
     // Do not allow scale and translation
-    return (0, _common.set)(value, {
+    return {
       mode: _constants.MODE_IDLE,
-      startX: null,
-      startY: null,
-      endX: null,
-      endY: null
-    });
+      start: _constants.NULL_POSITION,
+      end: _constants.NULL_POSITION
+    };
   }
 
-  return (0, _common.set)(value, _objectSpread({
-    mode: _constants.MODE_IDLE
-  }, limitZoomLevel(value, matrix), {
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null
-  }), _constants.ACTION_ZOOM);
+  return {
+    mode: _constants.MODE_IDLE,
+    matrix: limitZoomLevel(newMatrix),
+    start: _constants.NULL_POSITION,
+    end: _constants.NULL_POSITION,
+    last_action: _constants.ACTION_ZOOM
+  };
 }
 
-function fitToViewer(value) {
-  var SVGAlignX = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _constants.ALIGN_LEFT;
-  var SVGAlignY = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _constants.ALIGN_TOP;
-  var viewerWidth = value.viewerWidth,
-      viewerHeight = value.viewerHeight,
-      SVGViewBoxX = value.SVGViewBoxX,
-      SVGViewBoxY = value.SVGViewBoxY,
-      SVGWidth = value.SVGWidth,
-      SVGHeight = value.SVGHeight;
+function fitToViewer(viewer, SVGAttributes) {
+  var SVGAlignX = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _constants.ALIGN_LEFT;
+  var SVGAlignY = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _constants.ALIGN_TOP;
+  var SVGMinX = SVGAttributes.SVGMinX,
+      SVGMinY = SVGAttributes.SVGMinY,
+      SVGWidth = SVGAttributes.SVGWidth,
+      SVGHeight = SVGAttributes.SVGHeight;
+  var viewerWidth = viewer.viewerWidth,
+      viewerHeight = viewer.viewerHeight;
   var scaleX = viewerWidth / SVGWidth;
   var scaleY = viewerHeight / SVGHeight;
   var scaleLevel = Math.min(scaleX, scaleY);
   var scaleMatrix = (0, _transformationMatrix.scale)(scaleLevel, scaleLevel);
-  var translateX = -SVGViewBoxX * scaleX;
-  var translateY = -SVGViewBoxY * scaleY; // after fitting, SVG and the viewer will match in width (1) or in height (2)
+  var translateX = -SVGMinX * scaleX;
+  var translateY = -SVGMinY * scaleY; // after fitting, SVG and the viewer will match in width (1) or in height (2)
 
   if (scaleX < scaleY) {
     //(1) match in width, meaning scaled SVGHeight <= viewerHeight
@@ -2587,15 +2469,15 @@ function fitToViewer(value) {
 
     switch (SVGAlignY) {
       case _constants.ALIGN_TOP:
-        translateY = -SVGViewBoxY * scaleLevel;
+        translateY = -SVGMinY * scaleLevel;
         break;
 
       case _constants.ALIGN_CENTER:
-        translateY = Math.round(remainderY / 2) - SVGViewBoxY * scaleLevel;
+        translateY = Math.round(remainderY / 2) - SVGMinY * scaleLevel;
         break;
 
       case _constants.ALIGN_BOTTOM:
-        translateY = remainderY - SVGViewBoxY * scaleLevel;
+        translateY = remainderY - SVGMinY * scaleLevel;
         break;
     }
   } else {
@@ -2604,15 +2486,15 @@ function fitToViewer(value) {
 
     switch (SVGAlignX) {
       case _constants.ALIGN_LEFT:
-        translateX = -SVGViewBoxX * scaleLevel;
+        translateX = -SVGMinX * scaleLevel;
         break;
 
       case _constants.ALIGN_CENTER:
-        translateX = Math.round(remainderX / 2) - SVGViewBoxX * scaleLevel;
+        translateX = Math.round(remainderX / 2) - SVGMinX * scaleLevel;
         break;
 
       case _constants.ALIGN_RIGHT:
-        translateX = remainderX - SVGViewBoxX * scaleLevel;
+        translateX = remainderX - SVGMinX * scaleLevel;
         break;
     }
   }
@@ -2622,66 +2504,60 @@ function fitToViewer(value) {
   scaleMatrix //1
   );
 
-  if (isZoomLevelGoingOutOfBounds(value, scaleLevel / value.d)) {
+  if (isZoomLevelGoingOutOfBounds(scaleLevel / matrix.d)) {
     // Do not allow scale and translation
-    return (0, _common.set)(value, {
+    return {
       mode: _constants.MODE_IDLE,
-      startX: null,
-      startY: null,
-      endX: null,
-      endY: null
-    });
+      start: _constants.NULL_POSITION,
+      end: _constants.NULL_POSITION
+    };
   }
 
-  return (0, _common.set)(value, _objectSpread({
-    mode: _constants.MODE_IDLE
-  }, limitZoomLevel(value, matrix), {
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null
-  }), _constants.ACTION_ZOOM);
+  return {
+    mode: _constants.MODE_IDLE,
+    matrix: limitZoomLevel(matrix),
+    start: _constants.NULL_POSITION,
+    end: _constants.NULL_POSITION,
+    last_action: _constants.ACTION_ZOOM
+  };
 }
 
-function zoomOnViewerCenter(value, scaleFactor) {
-  var viewerWidth = value.viewerWidth,
-      viewerHeight = value.viewerHeight;
-  var SVGPoint = (0, _common.getSVGPoint)(value, viewerWidth / 2, viewerHeight / 2);
-  return zoom(value, SVGPoint.x, SVGPoint.y, scaleFactor);
+function zoomOnViewerCenter(matrix, viewer, scaleFactor, scaleFactorMin, scaleFactorMax) {
+  var viewerWidth = viewer.viewerWidth,
+      viewerHeight = viewer.viewerHeight;
+  var SVGPoint = (0, _common.getSVGPoint)(viewerWidth / 2, viewerHeight / 2, matrix);
+  return zoom(matrix, SVGPoint, scaleFactor, scaleFactorMin, scaleFactorMax);
 }
 
-function startZooming(value, viewerX, viewerY) {
-  return (0, _common.set)(value, {
+function startZooming(viewer) {
+  return {
     mode: _constants.MODE_ZOOMING,
-    startX: viewerX,
-    startY: viewerY,
-    endX: viewerX,
-    endY: viewerY
-  });
+    start: viewer,
+    end: viewer
+  };
 }
 
-function updateZooming(value, viewerX, viewerY) {
-  if (value.mode !== _constants.MODE_ZOOMING) throw new Error('update selection not allowed in this mode ' + value.mode);
-  return (0, _common.set)(value, {
-    endX: viewerX,
-    endY: viewerY
-  });
+function updateZooming(mode, cursor) {
+  if (mode !== _constants.MODE_ZOOMING) throw new Error('update selection not allowed in this mode ' + mode);
+  return {
+    end: cursor
+  };
 }
 
-function stopZooming(value, viewerX, viewerY, scaleFactor, props) {
-  var startX = value.startX,
-      startY = value.startY,
-      endX = value.endX,
-      endY = value.endY;
-  var start = (0, _common.getSVGPoint)(value, startX, startY);
-  var end = (0, _common.getSVGPoint)(value, endX, endY);
+function stopZooming(cursor, start, end, matrix, scaleFactor, props, viewer) {
+  var startPos = (0, _common.getSVGPoint)(start.x, start.y, matrix);
+  var endPos = (0, _common.getSVGPoint)(end.x, end.y, matrix);
 
-  if (Math.abs(startX - endX) > 7 && Math.abs(startY - endY) > 7) {
-    var box = (0, _calculateBox.default)(start, end);
-    return fitSelection(value, box.x, box.y, box.width, box.height);
+  if (Math.abs(startPos.x - endPos.x) > 7 && Math.abs(startPos.y - endPos.y) > 7) {
+    // either fit around the box...
+    var box = (0, _calculateBox.default)(startPos, endPos);
+    return fitSelection(box.x, box.y, box.width, box.height, viewer.viewerWidth, viewer.viewerHeight);
   } else {
-    var SVGPoint = (0, _common.getSVGPoint)(value, viewerX, viewerY);
-    return zoom(value, SVGPoint.x, SVGPoint.y, scaleFactor, props);
+    // ...or zoom in around the cursor
+    var SVGPoint = (0, _common.getSVGPoint)(cursor.x, cursor.y, matrix);
+    var scaleFactorMin = props.scaleFactorMin,
+        scaleFactorMax = props.scaleFactorMax;
+    return zoom(matrix, SVGPoint, scaleFactor, scaleFactorMin, scaleFactorMax);
   }
 }
 
@@ -2717,31 +2593,37 @@ function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArra
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 /**
  *
- * @param value
  * @param SVGDeltaX
  * @param SVGDeltaY
  * @param panLimit
  * @returns {Object}
  */
-function pan(value, SVGDeltaX, SVGDeltaY) {
-  var panLimit = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : undefined;
-  var matrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.fromObject)(value), //2
-  (0, _transformationMatrix.translate)(SVGDeltaX, SVGDeltaY) //1
+function pan(initialMatrix, delta, viewer, SVGAttributes) {
+  var panLimit = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : undefined;
+  var matrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.fromObject)(initialMatrix), //2
+  (0, _transformationMatrix.translate)(delta.x, delta.y) //1
   ); // apply pan limits
 
   if (panLimit) {
+    var viewerWidth = viewer.viewerWidth,
+        viewerHeight = viewer.viewerHeight;
+    var SVGMinX = SVGAttributes.SVGMinX,
+        SVGMinY = SVGAttributes.SVGMinY,
+        SVGWidth = SVGAttributes.SVGWidth,
+        SVGHeight = SVGAttributes.SVGHeight;
+
     var _applyToPoints = (0, _transformationMatrix.applyToPoints)(matrix, [{
-      x: value.SVGViewBoxX + panLimit,
-      y: value.SVGViewBoxY + panLimit
+      x: SVGMinX + panLimit,
+      y: SVGMinY + panLimit
     }, {
-      x: value.SVGViewBoxX + value.SVGWidth - panLimit,
-      y: value.SVGViewBoxY + value.SVGHeight - panLimit
+      x: SVGMinX + SVGWidth - panLimit,
+      y: SVGMinY + SVGHeight - panLimit
     }]),
         _applyToPoints2 = _slicedToArray(_applyToPoints, 2),
         _applyToPoints2$ = _applyToPoints2[0],
@@ -2753,65 +2635,67 @@ function pan(value, SVGDeltaX, SVGDeltaY) {
 
 
     var moveX = 0;
-    if (value.viewerWidth - x1 < 0) moveX = value.viewerWidth - x1;else if (x2 < 0) moveX = -x2; //y limit
+    if (viewerWidth - x1 < 0) moveX = viewerWidth - x1;else if (x2 < 0) moveX = -x2; //y limit
 
     var moveY = 0;
-    if (value.viewerHeight - y1 < 0) moveY = value.viewerHeight - y1;else if (y2 < 0) moveY = -y2; //apply limits
+    if (viewerHeight - y1 < 0) moveY = viewerHeight - y1;else if (y2 < 0) moveY = -y2; //apply limits
 
     matrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.translate)(moveX, moveY), matrix);
   }
 
-  return (0, _common.set)(value, _objectSpread({
-    mode: _constants.MODE_IDLE
-  }, matrix), _constants.ACTION_PAN);
-}
-
-function startPanning(value, viewerX, viewerY) {
-  return (0, _common.set)(value, {
-    mode: _constants.MODE_PANNING,
-    startX: viewerX,
-    startY: viewerY,
-    endX: viewerX,
-    endY: viewerY
-  }, _constants.ACTION_PAN);
-}
-
-function updatePanning(value, viewerX, viewerY, panLimit) {
-  if (value.mode !== _constants.MODE_PANNING) throw new Error('update pan not allowed in this mode ' + value.mode);
-  var endX = value.endX,
-      endY = value.endY;
-  var start = (0, _common.getSVGPoint)(value, endX, endY);
-  var end = (0, _common.getSVGPoint)(value, viewerX, viewerY);
-  var deltaX = end.x - start.x;
-  var deltaY = end.y - start.y;
-  var nextValue = pan(value, deltaX, deltaY, panLimit);
-  return (0, _common.set)(nextValue, {
-    mode: _constants.MODE_PANNING,
-    endX: viewerX,
-    endY: viewerY
-  }, _constants.ACTION_PAN);
-}
-
-function stopPanning(value) {
-  return (0, _common.set)(value, {
+  return {
     mode: _constants.MODE_IDLE,
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null
-  }, _constants.ACTION_PAN);
+    matrix: matrix,
+    lastAction: _constants.ACTION_PAN
+  };
 }
 
-function autoPanIfNeeded(value, viewerX, viewerY) {
+function startPanning(viewer) {
+  return {
+    mode: _constants.MODE_PANNING,
+    start: viewer,
+    end: viewer,
+    last_action: _constants.ACTION_PAN
+  };
+}
+
+function updatePanning(cursor, start, end, matrix, panLimit, mode, viewer, SVGAttributes) {
+  if (mode !== _constants.MODE_PANNING) throw new Error('update pan not allowed in this mode ' + mode);
+  var startPos = (0, _common.getSVGPoint)(end.x, end.y, matrix);
+  var endPos = (0, _common.getSVGPoint)(cursor.x, cursor.y, matrix);
+  var delta = {
+    x: endPos.x - startPos.x,
+    y: endPos.y - startPos.y
+  };
+  return _objectSpread({}, pan(matrix, delta, viewer, SVGAttributes, panLimit), {
+    mode: _constants.MODE_PANNING,
+    end: cursor,
+    last_action: _constants.ACTION_PAN
+  });
+}
+
+function stopPanning() {
+  return {
+    mode: _constants.MODE_IDLE,
+    start: _constants.NULL_POSITION,
+    end: _constants.NULL_POSITION,
+    last_action: _constants.ACTION_PAN
+  };
+}
+
+function autoPanIfNeeded(viewer, pointer, matrix) {
   var deltaX = 0;
   var deltaY = 0;
-  if (viewerY <= 20) deltaY = 2;
-  if (value.viewerWidth - viewerX <= 20) deltaX = -2;
-  if (value.viewerHeight - viewerY <= 20) deltaY = -2;
-  if (viewerX <= 20) deltaX = 2;
-  deltaX = deltaX / value.d;
-  deltaY = deltaY / value.d;
-  return deltaX === 0 && deltaY === 0 ? value : pan(value, deltaX, deltaY);
+  if (pointer.y <= 20) deltaY = 2;
+  if (viewer.viewerWidth - pointer.x <= 20) deltaX = -2;
+  if (viewer.viewerHeight - pointer.y <= 20) deltaY = -2;
+  if (pointer.x <= 20) deltaX = 2;
+  deltaX = deltaX / matrix.d;
+  deltaY = deltaY / matrix.d;
+  return deltaX === 0 && deltaY === 0 ? {} : pan(matrix, {
+    x: deltaX,
+    y: deltaY
+  }, null, viewer);
 }
 
 /***/ }),
@@ -2827,18 +2711,16 @@ Object.defineProperty(exports, "__esModule", {
 exports.openMiniature = openMiniature;
 exports.closeMiniature = closeMiniature;
 
-var _common = __webpack_require__(3);
-
-function openMiniature(value) {
-  return (0, _common.set)(value, {
+function openMiniature() {
+  return {
     miniatureOpen: true
-  });
+  };
 }
 
-function closeMiniature(value) {
-  return (0, _common.set)(value, {
+function closeMiniature() {
+  return {
     miniatureOpen: false
-  });
+  };
 }
 
 /***/ }),
@@ -2857,7 +2739,7 @@ exports.tipDeprecatedMiniatureProps = tipDeprecatedMiniatureProps;
 exports.tipDeprecateToolbarProps = tipDeprecateToolbarProps;
 exports.printMigrationTipsRelatedToProps = printMigrationTipsRelatedToProps;
 
-var _is = __webpack_require__(17);
+var _is = __webpack_require__(9);
 
 var github_base = 'https://github.com/chrvadala/react-svg-pan-zoom/blob/master';
 var doc_v1_to_v2 = github_base + '/docs/migrate-from-v1-to-v2.md';
@@ -2880,7 +2762,8 @@ function tipDeprecateToolbarProps() {
 }
 
 function printMigrationTipsRelatedToProps(props) {
-  if ((0, _is.isNullOrUndefined)(props.tool) || (0, _is.isNullOrUndefined)(props.value)) tipControlledComponent();
+  if ((0, _is.isNullOrUndefined)(props.tool)) tipControlledComponent(); // #TODO mention somethign about 'value' in vrsion 4
+
   if (!(0, _is.isNullOrUndefined)(props.miniaturePosition) || !(0, _is.isNullOrUndefined)(props.miniatureBackground) || !(0, _is.isNullOrUndefined)(props.miniatureWidth) || !(0, _is.isNullOrUndefined)(props.miniatureHeight)) tipDeprecatedMiniatureProps();
   if (!(0, _is.isNullOrUndefined)(props.toolbarPosition)) tipDeprecateToolbarProps();
 }
@@ -2895,9 +2778,30 @@ function printMigrationTipsRelatedToProps(props) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.isNullOrUndefined = isNullOrUndefined;
+exports.isEmpty = isEmpty;
+
+function isNullOrUndefined(value) {
+  return typeof value === 'undefined' || value === null;
+}
+
+function isEmpty(obj) {
+  return Object.keys(obj).length === 0;
+}
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.default = void 0;
 
-var _react = _interopRequireDefault(__webpack_require__(0));
+var _react = _interopRequireWildcard(__webpack_require__(0));
 
 var _propTypes = _interopRequireDefault(__webpack_require__(2));
 
@@ -2909,25 +2813,29 @@ var _pan2 = __webpack_require__(6);
 
 var _common = __webpack_require__(3);
 
-var _interactions = __webpack_require__(11);
+var _interactions = __webpack_require__(12);
 
-var _interactionsTouch = __webpack_require__(22);
+var _ViewBoxParser = _interopRequireDefault(__webpack_require__(22));
+
+var _is = __webpack_require__(9);
+
+var _interactionsTouch = __webpack_require__(23);
 
 var _zoom2 = __webpack_require__(5);
 
 var _miniature = __webpack_require__(7);
 
-var _cursorPolyfill = _interopRequireDefault(__webpack_require__(23));
+var _cursorPolyfill = _interopRequireDefault(__webpack_require__(24));
 
-var _borderGradient = _interopRequireDefault(__webpack_require__(24));
+var _borderGradient = _interopRequireDefault(__webpack_require__(25));
 
-var _selection = _interopRequireDefault(__webpack_require__(26));
+var _selection = _interopRequireDefault(__webpack_require__(27));
 
-var _toolbar = _interopRequireDefault(__webpack_require__(14));
+var _toolbar = _interopRequireDefault(__webpack_require__(15));
 
-var _detectTouch = _interopRequireDefault(__webpack_require__(33));
+var _detectTouch = _interopRequireDefault(__webpack_require__(34));
 
-var _miniature2 = _interopRequireDefault(__webpack_require__(15));
+var _miniature2 = _interopRequireDefault(__webpack_require__(16));
 
 var _constants = __webpack_require__(1);
 
@@ -2935,7 +2843,9 @@ var _migrationTips = __webpack_require__(8);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; if (obj != null) { var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -2949,459 +2859,436 @@ function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArra
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var ReactSVGPanZoom = (0, _react.forwardRef)(function (props, Viewer) {
+  if (false) {}
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+  var viewerWidth = props.width,
+      viewerHeight = props.height,
+      scaleFactorMin = props.scaleFactorMin,
+      scaleFactorMax = props.scaleFactorMax,
+      children = props.children;
+  var viewer = {
+    viewerWidth: viewerWidth,
+    viewerHeight: viewerHeight
+  };
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+  var _useState = (0, _react.useState)(true),
+      _useState2 = _slicedToArray(_useState, 2),
+      autoPanIsRunning = _useState2[0],
+      setAutoPanning = _useState2[1];
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+  var _useState3 = (0, _react.useState)(_constants.POSITION_NONE),
+      _useState4 = _slicedToArray(_useState3, 2),
+      autoPanHover = _useState4[0],
+      setAutoPanHover = _useState4[1];
 
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+  var _useState5 = (0, _react.useState)(_constants.TOOL_AUTO),
+      _useState6 = _slicedToArray(_useState5, 2),
+      tool = _useState6[0],
+      setTool = _useState6[1];
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+  var _useState7 = (0, _react.useState)((0, _transformationMatrix.identity)()),
+      _useState8 = _slicedToArray(_useState7, 2),
+      matrix = _useState8[0],
+      setMatrix = _useState8[1];
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+  var _useState9 = (0, _react.useState)(_constants.NULL_POSITION),
+      _useState10 = _slicedToArray(_useState9, 2),
+      start = _useState10[0],
+      setStart = _useState10[1];
 
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+  var _useState11 = (0, _react.useState)(_constants.NULL_POSITION),
+      _useState12 = _slicedToArray(_useState11, 2),
+      end = _useState12[0],
+      setEnd = _useState12[1];
 
-var ReactSVGPanZoom =
-/*#__PURE__*/
-function (_React$Component) {
-  _inherits(ReactSVGPanZoom, _React$Component);
+  var _useState13 = (0, _react.useState)(_constants.MODE_IDLE),
+      _useState14 = _slicedToArray(_useState13, 2),
+      mode = _useState14[0],
+      setMode = _useState14[1];
 
-  function ReactSVGPanZoom(props, context) {
-    var _this;
+  var _useState15 = (0, _react.useState)(false),
+      _useState16 = _slicedToArray(_useState15, 2),
+      focus = _useState16[0],
+      setFocus = _useState16[1];
 
-    _classCallCheck(this, ReactSVGPanZoom);
+  var _useState17 = (0, _react.useState)(null),
+      _useState18 = _slicedToArray(_useState17, 2),
+      pinchPointDistance = _useState18[0],
+      setPinchPointDistance = _useState18[1];
 
-    var value = props.value,
-        viewerWidth = props.width,
-        viewerHeight = props.height,
-        scaleFactorMin = props.scaleFactorMin,
-        scaleFactorMax = props.scaleFactorMax,
-        children = props.children;
-    var SVGViewBox = children.props.withViewBox;
-    var defaultValue;
+  var _useState19 = (0, _react.useState)(null),
+      _useState20 = _slicedToArray(_useState19, 2),
+      prePinchMode = _useState20[0],
+      setPrePinchMode = _useState20[1];
 
-    if (SVGViewBox) {
-      var _SVGViewBox$split$map = SVGViewBox.split(' ').map(parseFloat),
-          _SVGViewBox$split$map2 = _slicedToArray(_SVGViewBox$split$map, 4),
-          SVGViewBoxX = _SVGViewBox$split$map2[0],
-          SVGViewBoxY = _SVGViewBox$split$map2[1],
-          SVGWidth = _SVGViewBox$split$map2[2],
-          SVGHeight = _SVGViewBox$split$map2[3];
+  var _useState21 = (0, _react.useState)(true),
+      _useState22 = _slicedToArray(_useState21, 2),
+      miniatureOpen = _useState22[0],
+      setMiniatureOpen = _useState22[1];
 
-      defaultValue = (0, _common.getDefaultValue)(viewerWidth, viewerHeight, SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight, scaleFactorMin, scaleFactorMax);
-    } else {
-      var _children$props = children.props,
-          _SVGWidth = _children$props.width,
-          _SVGHeight = _children$props.height;
-      defaultValue = (0, _common.getDefaultValue)(viewerWidth, viewerHeight, 0, 0, _SVGWidth, _SVGHeight, scaleFactorMin, scaleFactorMax);
-    }
+  var _useState23 = (0, _react.useState)(null),
+      _useState24 = _slicedToArray(_useState23, 2),
+      lastAction = _useState24[0],
+      setLastAction = _useState24[1];
 
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(ReactSVGPanZoom).call(this, props, context));
-    _this.ViewerDOM = null;
-    _this.state = {
-      pointerX: null,
-      pointerY: null,
-      defaultValue: defaultValue
+  var ViewerDOM = (0, _react.useRef)(null);
+  var boundingRect = ViewerDOM.current && ViewerDOM.current.getBoundingClientRect();
+  var SVGViewBox = children.props.viewBox;
+
+  var _ref = SVGViewBox ? (0, _ViewBoxParser.default)(SVGViewBox) : {
+    SVGHeight: children.props.height,
+    SVGWidth: children.props.width,
+    SVGMinX: 0,
+    SVGMinY: 0
+  },
+      SVGMinX = _ref.SVGMinX,
+      SVGMinY = _ref.SVGMinY,
+      SVGWidth = _ref.SVGWidth,
+      SVGHeight = _ref.SVGHeight;
+
+  var SVGAttributes = {
+    SVGMinX: SVGMinX,
+    SVGMinY: SVGMinY,
+    SVGWidth: SVGWidth,
+    SVGHeight: SVGHeight
+  };
+  var hoverBorderRef = (0, _react.useRef)();
+  (0, _react.useEffect)(function () {
+    hoverBorderRef.current = requestAnimationFrame(function () {
+      return panOnHover(matrix);
+    });
+    return function () {
+      return cancelAnimationFrame(hoverBorderRef.current);
     };
-    _this.autoPanLoop = _this.autoPanLoop.bind(_assertThisInitialized(_this));
+  }, [autoPanHover]);
 
-    if (false) {}
+  var panOnHover = function panOnHover(inputMatrix) {
+    var deltaX = 0;
+    var deltaY = 0;
 
-    return _this;
+    if (autoPanHover === _constants.POSITION_NONE) {
+      cancelAnimationFrame(hoverBorderRef.current);
+    } else {
+      switch (autoPanHover) {
+        case _constants.POSITION_TOP:
+          deltaY = -2;
+          break;
+
+        case _constants.POSITION_RIGHT:
+          deltaX = 2;
+          break;
+
+        case _constants.POSITION_BOTTOM:
+          deltaY = 2;
+          break;
+
+        case _constants.POSITION_LEFT:
+          deltaX = -2;
+          break;
+      }
+
+      var delta = {
+        x: deltaX / inputMatrix.d,
+        y: deltaY / inputMatrix.d
+      };
+      var nextValue = (0, _pan2.pan)(inputMatrix, delta, viewer, SVGAttributes, props.preventPanOutside ? 20 : undefined);
+      updateValue(nextValue);
+      hoverBorderRef.current = requestAnimationFrame(function () {
+        return panOnHover(nextValue.matrix);
+      });
+    }
+  }; // on value change
+
+
+  (0, _react.useEffect)(function () {
+    var onChangeValue = props.onChangeValue,
+        onZoom = props.onZoom,
+        onPan = props.onPan;
+    var nextValue = getValue();
+    if (onChangeValue) onChangeValue(nextValue);
+
+    if (nextValue.lastAction) {
+      if (onZoom && nextValue.lastAction === _constants.ACTION_ZOOM) onZoom(nextValue);
+      if (onPan && nextValue.lastAction === _constants.ACTION_PAN) onPan(nextValue);
+    }
+  }, [matrix, start, end, mode, focus, pinchPointDistance, prePinchMode, miniatureOpen, lastAction]);
+
+  function getValue() {
+    return {
+      //directly from props:
+      viewerWidth: viewerWidth,
+      viewerHeight: viewerHeight,
+      scaleFactorMin: scaleFactorMin,
+      scaleFactorMax: scaleFactorMax,
+      //from child props:
+      SVGAttributes: SVGAttributes,
+      //
+      matrix: matrix,
+      start: start,
+      end: end,
+      //
+      mode: mode,
+      focus: focus,
+      pinchPointDistance: pinchPointDistance,
+      prePinchMode: prePinchMode,
+      miniatureOpen: miniatureOpen,
+      lastAction: lastAction,
+      //
+      version: 3
+    };
   }
-  /** React hooks **/
+
+  function updateValue(nextValue) {
+    var matrix = nextValue.matrix,
+        start = nextValue.start,
+        end = nextValue.end,
+        mode = nextValue.mode,
+        lastAction = nextValue.lastAction,
+        miniatureOpen = nextValue.miniatureOpen;
+    if ('matrix' in nextValue) setMatrix(matrix);
+    if ('start' in nextValue) setStart(start);
+    if ('end' in nextValue) setEnd(end);
+    if ('mode' in nextValue) setMode(mode);
+    if ('focus' in nextValue) setFocus(focus);
+    if ('lastAction' in nextValue) setLastAction(lastAction);
+    if ('miniatureOpen' in nextValue) setMiniatureOpen(miniatureOpen);
+    var onChangeValue = props.onChangeValue;
+    if (onChangeValue) onChangeValue(getValue());
+  }
+  /** ReactSVGPanZoom methods **/
 
 
-  _createClass(ReactSVGPanZoom, [{
-    key: "componentDidUpdate",
-    value: function componentDidUpdate(prevProps) {
-      var value = this.getValue();
-      var props = this.props;
-      var nextValue = value;
-      var needUpdate = false;
-
-      if (false) {} // This block checks the size of the SVG
-
-
-      var SVGViewBox = props.children.props.withViewBox;
-
-      if (SVGViewBox) {
-        // if the withViewBox prop is specified
-        var _SVGViewBox$split$map3 = SVGViewBox.split(' ').map(parseFloat),
-            _SVGViewBox$split$map4 = _slicedToArray(_SVGViewBox$split$map3, 4),
-            x = _SVGViewBox$split$map4[0],
-            y = _SVGViewBox$split$map4[1],
-            width = _SVGViewBox$split$map4[2],
-            height = _SVGViewBox$split$map4[3];
-
-        if (value.SVGViewBoxX !== x || value.SVGViewBoxY !== y || value.SVGWidth !== width || value.SVGHeight !== height) {
-          nextValue = (0, _common.setSVGViewBox)(nextValue, x, y, width, height);
-          needUpdate = true;
-        }
-      } else {
-        // if the width and height props are specified
-        var _props$children$props = props.children.props,
-            SVGWidth = _props$children$props.width,
-            SVGHeight = _props$children$props.height;
-
-        if (value.SVGWidth !== SVGWidth || value.SVGHeight !== SVGHeight) {
-          nextValue = (0, _common.setSVGViewBox)(nextValue, 0, 0, SVGWidth, SVGHeight);
-          needUpdate = true;
-        }
-      } // This block checks the size of the viewer
-
-
-      if (prevProps.width !== props.width || prevProps.height !== props.height) {
-        nextValue = (0, _common.setViewerSize)(nextValue, props.width, props.height);
-        needUpdate = true;
-      } // This blocks checks the scale factors
-
-
-      if (prevProps.scaleFactorMin !== props.scaleFactorMin || prevProps.scaleFactorMax !== props.scaleFactorMax) {
-        nextValue = (0, _common.setZoomLevels)(nextValue, props.scaleFactorMin, props.scaleFactorMax);
-        needUpdate = true;
+  (0, _react.useImperativeHandle)(Viewer, function () {
+    return {
+      pan: function pan(SVGDeltaX, SVGDeltaY) {
+        var nextValue = (0, _pan2.pan)(matrix, {
+          x: SVGDeltaX,
+          y: SVGDeltaY
+        }, viewer, SVGAttributes, props.preventPanOutside ? 20 : undefined);
+        updateValue(nextValue);
+      },
+      zoom: function zoom(SVGPointX, SVGPointY, scaleFactor) {
+        var nextValue = (0, _zoom2.zoom)(matrix, {
+          x: SVGPointX,
+          y: SVGPointY
+        }, scaleFactor, scaleFactorMin, scaleFactorMax);
+        updateValue(nextValue);
+      },
+      fitSelection: function fitSelection(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight) {
+        var nextValue = (0, _zoom2.fitSelection)(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight, viewerWidth, viewerHeight);
+        updateValue(nextValue);
+      },
+      fitToViewer: function fitToViewer() {
+        var SVGAlignX = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _constants.ALIGN_LEFT;
+        var SVGAlignY = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _constants.ALIGN_TOP;
+        var nextValue = (0, _zoom2.fitToViewer)(viewer, SVGAttributes, SVGAlignX, SVGAlignY);
+        updateValue(nextValue);
+      },
+      zoomOnViewerCenter: function zoomOnViewerCenter(scaleFactor) {
+        var nextValue = (0, _zoom2.zoomOnViewerCenter)(matrix, viewer, scaleFactor, scaleFactorMin, scaleFactorMax);
+        updateValue(nextValue);
+      },
+      setPointOnViewerCenter: function setPointOnViewerCenter(SVGPointX, SVGPointY, zoomLevel) {
+        var nextValue = (0, _common.setPointOnViewerCenter)(viewerWidth, viewerHeight, SVGPointX, SVGPointY, zoomLevel);
+        updateValue(nextValue);
+      },
+      reset: function reset() {
+        var nextValue = (0, _common.reset)();
+        updateValue(nextValue);
+      },
+      openMiniature: function openMiniature() {
+        var nextValue = (0, _miniature.openMiniature)();
+        updateValue(nextValue);
+      },
+      closeMiniature: function closeMiniature() {
+        var nextValue = (0, _miniature.closeMiniature)();
+        updateValue(nextValue);
+      },
+      changeTool: function changeTool(tool) {
+        setTool(tool);
       }
+    };
+  });
+  /** ReactSVGPanZoom internals **/
 
-      if (needUpdate) {
-        this.setValue(nextValue);
-      }
+  function handleViewerEvent(event) {
+    if (!([_constants.TOOL_NONE, _constants.TOOL_AUTO].indexOf(tool) >= 0)) return;
+    if (event.target === ViewerDOM) return;
+    var eventsHandler = {
+      click: props.onClick,
+      dblclick: props.onDoubleClick,
+      mousemove: props.onMouseMove,
+      mouseup: props.onMouseUp,
+      mousedown: props.onMouseDown,
+      touchstart: props.onTouchStart,
+      touchmove: props.onTouchMove,
+      touchend: props.onTouchEnd,
+      touchcancel: props.onTouchCancel
+    };
+    var onEventHandler = eventsHandler[event.type];
+    if (!onEventHandler) return;
+    onEventHandler((0, _eventFactory.default)(event, matrix, boundingRect));
+  }
+  /** React renderer **/
+
+
+  var CustomToolbar = props.customToolbar,
+      CustomMiniature = props.customMiniature;
+  var panningWithToolAuto = tool === _constants.TOOL_AUTO && mode === _constants.MODE_PANNING && start.x !== end.x && start.y !== end.y;
+  var cursor;
+  if (tool === _constants.TOOL_PAN) cursor = (0, _cursorPolyfill.default)(mode === _constants.MODE_PANNING ? 'grabbing' : 'grab');
+  if (tool === _constants.TOOL_ZOOM_IN) cursor = (0, _cursorPolyfill.default)('zoom-in');
+  if (tool === _constants.TOOL_ZOOM_OUT) cursor = (0, _cursorPolyfill.default)('zoom-out');
+  if (panningWithToolAuto) cursor = (0, _cursorPolyfill.default)('grabbing');
+  var blockChildEvents = [_constants.TOOL_PAN, _constants.TOOL_ZOOM_IN, _constants.TOOL_ZOOM_OUT].indexOf(tool) >= 0;
+  blockChildEvents = blockChildEvents || panningWithToolAuto;
+  var touchAction = props.detectPinchGesture || [_constants.TOOL_PAN, _constants.TOOL_AUTO].indexOf(tool) !== -1 ? 'none' : undefined;
+  var style = {
+    display: 'block',
+    cursor: cursor,
+    touchAction: touchAction
+  };
+  return _react.default.createElement("div", {
+    style: _objectSpread({
+      position: "relative",
+      width: viewerWidth,
+      height: viewerHeight
+    }, props.style),
+    className: props.className
+  }, _react.default.createElement("svg", {
+    ref: ViewerDOM,
+    width: viewerWidth,
+    height: viewerHeight,
+    style: style,
+    onMouseDown: function onMouseDown(event) {
+      var nextValue = (0, _interactions.onMouseDown)(event, boundingRect, matrix, tool, props, mode);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+      handleViewerEvent(event);
+    },
+    onMouseMove: function onMouseMove(event) {
+      var nextValue = (0, _interactions.onMouseMove)(event, boundingRect, matrix, tool, props, mode, start, end, viewer, SVGAttributes);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+      handleViewerEvent(event);
+    },
+    onMouseUp: function onMouseUp(event) {
+      var nextValue = (0, _interactions.onMouseUp)(event, boundingRect, matrix, tool, props, mode, start, end, viewer);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+      handleViewerEvent(event);
+    },
+    onClick: function onClick(event) {
+      handleViewerEvent(event);
+    },
+    onDoubleClick: function onDoubleClick(event) {
+      var nextValue = (0, _interactions.onDoubleClick)(event, boundingRect, matrix, tool, props, mode);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+      handleViewerEvent(event);
+    },
+    onWheel: function onWheel(event) {
+      var nextValue = (0, _interactions.onWheel)(event, boundingRect, matrix, tool, props, mode);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+    },
+    onMouseEnter: function onMouseEnter(event) {
+      if ((0, _detectTouch.default)()) return;
+      var nextValue = (0, _interactions.onMouseEnterOrLeave)(event, boundingRect, matrix, tool, props, mode);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+    },
+    onMouseLeave: function onMouseLeave(event) {
+      var nextValue = (0, _interactions.onMouseEnterOrLeave)(event, boundingRect, matrix, tool, props, mode);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+    },
+    onTouchStart: function onTouchStart(event) {
+      var nextValue = (0, _interactionsTouch.onTouchStart)(event, boundingRect, matrix, tool, props, mode);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+      handleViewerEvent(event);
+    },
+    onTouchMove: function onTouchMove(event) {
+      var nextValue = (0, _interactionsTouch.onTouchMove)(event, boundingRect, matrix, tool, props, mode);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+      handleViewerEvent(event);
+    },
+    onTouchEnd: function onTouchEnd(event) {
+      var nextValue = (0, _interactionsTouch.onTouchEnd)(event, boundingRect, matrix, tool, props, mode);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+      handleViewerEvent(event);
+    },
+    onTouchCancel: function onTouchCancel(event) {
+      var nextValue = (0, _interactionsTouch.onTouchCancel)(event, boundingRect, tool, props, mode);
+      if (!(0, _is.isEmpty)(nextValue)) updateValue(nextValue);
+      handleViewerEvent(event);
     }
-  }, {
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      this.autoPanIsRunning = true;
-      requestAnimationFrame(this.autoPanLoop);
+  }, _react.default.createElement("rect", {
+    fill: props.background,
+    x: 0,
+    y: 0,
+    width: viewerWidth,
+    height: viewerHeight,
+    style: {
+      pointerEvents: "none"
     }
-  }, {
-    key: "componentWillUnmount",
-    value: function componentWillUnmount() {
-      this.autoPanIsRunning = false;
+  }), _react.default.createElement("g", {
+    transform: (0, _transformationMatrix.toSVG)(matrix),
+    style: blockChildEvents ? {
+      pointerEvents: "none"
+    } : {}
+  }, _react.default.createElement("rect", {
+    fill: props.SVGBackground,
+    style: props.SVGStyle,
+    x: SVGMinX || 0,
+    y: SVGMinY || 0,
+    width: SVGWidth,
+    height: SVGHeight
+  }), _react.default.createElement("g", null, children.props.children)), !([_constants.TOOL_NONE, _constants.TOOL_AUTO].indexOf(tool) >= 0 && props.detectAutoPan) ? null : _react.default.createElement("g", null, _react.default.createElement(_borderGradient.default, {
+    direction: _constants.POSITION_TOP,
+    width: viewerWidth,
+    height: viewerHeight,
+    setAutoPanHover: setAutoPanHover
+  }), _react.default.createElement(_borderGradient.default, {
+    direction: _constants.POSITION_RIGHT,
+    width: viewerWidth,
+    height: viewerHeight,
+    setAutoPanHover: setAutoPanHover
+  }), _react.default.createElement(_borderGradient.default, {
+    direction: _constants.POSITION_BOTTOM,
+    width: viewerWidth,
+    height: viewerHeight,
+    setAutoPanHover: setAutoPanHover
+  }), _react.default.createElement(_borderGradient.default, {
+    direction: _constants.POSITION_LEFT,
+    width: viewerWidth,
+    height: viewerHeight,
+    setAutoPanHover: setAutoPanHover
+  })), !(mode === _constants.MODE_ZOOMING) ? null : _react.default.createElement(_selection.default, {
+    startX: start.x,
+    startY: start.y,
+    endX: end.x,
+    endY: end.y
+  })), props.toolbarProps.position === _constants.POSITION_NONE ? null : _react.default.createElement(CustomToolbar, _extends({}, props.toolbarProps, {
+    fitToViewer: function fitToViewer(SVGAlignX, SVGAlignY) {
+      return updateValue((0, _zoom2.fitToViewer)(viewer, SVGAttributes, SVGAlignX, SVGAlignY));
+    },
+    tool: tool,
+    onChangeTool: function onChangeTool(tool) {
+      setTool(tool);
+      var onChangeTool = props.onChangeTool;
+      if (onChangeTool) onChangeTool(tool);
     }
-    /** ReactSVGPanZoom handlers **/
-
-  }, {
-    key: "getValue",
-    value: function getValue() {
-      if ((0, _common.isValueValid)(this.props.value)) return this.props.value;
-      return this.state.defaultValue;
-    }
-  }, {
-    key: "getTool",
-    value: function getTool() {
-      if (this.props.tool) return this.props.tool;
-      return _constants.TOOL_NONE;
-    }
-  }, {
-    key: "setValue",
-    value: function setValue(nextValue) {
-      var _this$props = this.props,
-          onChangeValue = _this$props.onChangeValue,
-          onZoom = _this$props.onZoom,
-          onPan = _this$props.onPan;
-      if (onChangeValue) onChangeValue(nextValue);
-
-      if (nextValue.lastAction) {
-        if (onZoom && nextValue.lastAction === _constants.ACTION_ZOOM) onZoom(nextValue);
-        if (onPan && nextValue.lastAction === _constants.ACTION_PAN) onPan(nextValue);
-      }
-    }
-    /** ReactSVGPanZoom methods **/
-
-  }, {
-    key: "pan",
-    value: function pan(SVGDeltaX, SVGDeltaY) {
-      var nextValue = (0, _pan2.pan)(this.getValue(), SVGDeltaX, SVGDeltaY);
-      this.setValue(nextValue);
-    }
-  }, {
-    key: "zoom",
-    value: function zoom(SVGPointX, SVGPointY, scaleFactor) {
-      var nextValue = (0, _zoom2.zoom)(this.getValue(), SVGPointX, SVGPointY, scaleFactor);
-      this.setValue(nextValue);
-    }
-  }, {
-    key: "fitSelection",
-    value: function fitSelection(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight) {
-      var nextValue = (0, _zoom2.fitSelection)(this.getValue(), selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight);
-      this.setValue(nextValue);
-    }
-  }, {
-    key: "fitToViewer",
-    value: function fitToViewer() {
-      var SVGAlignX = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _constants.ALIGN_LEFT;
-      var SVGAlignY = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _constants.ALIGN_TOP;
-      var nextValue = (0, _zoom2.fitToViewer)(this.getValue(), SVGAlignX, SVGAlignY);
-      this.setValue(nextValue);
-    }
-  }, {
-    key: "zoomOnViewerCenter",
-    value: function zoomOnViewerCenter(scaleFactor) {
-      var nextValue = (0, _zoom2.zoomOnViewerCenter)(this.getValue(), scaleFactor);
-      this.setValue(nextValue);
-    }
-  }, {
-    key: "setPointOnViewerCenter",
-    value: function setPointOnViewerCenter(SVGPointX, SVGPointY, zoomLevel) {
-      var nextValue = (0, _common.setPointOnViewerCenter)(this.getValue(), SVGPointX, SVGPointY, zoomLevel);
-      this.setValue(nextValue);
-    }
-  }, {
-    key: "reset",
-    value: function reset() {
-      var nextValue = (0, _common.reset)(this.getValue());
-      this.setValue(nextValue);
-    }
-  }, {
-    key: "openMiniature",
-    value: function openMiniature() {
-      var nextValue = (0, _miniature.openMiniature)(this.getValue());
-      this.setValue(nextValue);
-    }
-  }, {
-    key: "closeMiniature",
-    value: function closeMiniature() {
-      var nextValue = (0, _miniature.closeMiniature)(this.getValue());
-      this.setValue(nextValue);
-    }
-    /** ReactSVGPanZoom internals **/
-
-  }, {
-    key: "handleViewerEvent",
-    value: function handleViewerEvent(event) {
-      var props = this.props,
-          ViewerDOM = this.ViewerDOM;
-      if (!([_constants.TOOL_NONE, _constants.TOOL_AUTO].indexOf(this.getTool()) >= 0)) return;
-      if (event.target === ViewerDOM) return;
-      var eventsHandler = {
-        click: props.onClick,
-        dblclick: props.onDoubleClick,
-        mousemove: props.onMouseMove,
-        mouseup: props.onMouseUp,
-        mousedown: props.onMouseDown,
-        touchstart: props.onTouchStart,
-        touchmove: props.onTouchMove,
-        touchend: props.onTouchEnd,
-        touchcancel: props.onTouchCancel
-      };
-      var onEventHandler = eventsHandler[event.type];
-      if (!onEventHandler) return;
-      onEventHandler((0, _eventFactory.default)(event, props.value, ViewerDOM));
-    }
-  }, {
-    key: "autoPanLoop",
-    value: function autoPanLoop() {
-      var coords = {
-        x: this.state.pointerX,
-        y: this.state.pointerY
-      };
-      var nextValue = (0, _interactions.onInterval)(null, this.ViewerDOM, this.getTool(), this.getValue(), this.props, coords);
-
-      if (this.getValue() !== nextValue) {
-        this.setValue(nextValue);
-      }
-
-      if (this.autoPanIsRunning) {
-        requestAnimationFrame(this.autoPanLoop);
-      }
-    }
-    /** React renderer **/
-
-  }, {
-    key: "render",
-    value: function render() {
-      var _this2 = this;
-
-      var props = this.props,
-          _this$state = this.state,
-          pointerX = _this$state.pointerX,
-          pointerY = _this$state.pointerY;
-      var tool = this.getTool();
-      var value = this.getValue();
-      var CustomToolbar = props.customToolbar,
-          CustomMiniature = props.customMiniature;
-      var panningWithToolAuto = tool === _constants.TOOL_AUTO && value.mode === _constants.MODE_PANNING && value.startX !== value.endX && value.startY !== value.endY;
-      var cursor;
-      if (tool === _constants.TOOL_PAN) cursor = (0, _cursorPolyfill.default)(value.mode === _constants.MODE_PANNING ? 'grabbing' : 'grab');
-      if (tool === _constants.TOOL_ZOOM_IN) cursor = (0, _cursorPolyfill.default)('zoom-in');
-      if (tool === _constants.TOOL_ZOOM_OUT) cursor = (0, _cursorPolyfill.default)('zoom-out');
-      if (panningWithToolAuto) cursor = (0, _cursorPolyfill.default)('grabbing');
-      var blockChildEvents = [_constants.TOOL_PAN, _constants.TOOL_ZOOM_IN, _constants.TOOL_ZOOM_OUT].indexOf(tool) >= 0;
-      blockChildEvents = blockChildEvents || panningWithToolAuto;
-      var touchAction = this.props.detectPinchGesture || [_constants.TOOL_PAN, _constants.TOOL_AUTO].indexOf(this.getTool()) !== -1 ? 'none' : undefined;
-      var style = {
-        display: 'block',
-        cursor: cursor,
-        touchAction: touchAction
-      };
-      return _react.default.createElement("div", {
-        style: _objectSpread({
-          position: "relative",
-          width: value.viewerWidth,
-          height: value.viewerHeight
-        }, props.style),
-        className: this.props.className
-      }, _react.default.createElement("svg", {
-        ref: function ref(ViewerDOM) {
-          return _this2.ViewerDOM = ViewerDOM;
-        },
-        width: value.viewerWidth,
-        height: value.viewerHeight,
-        style: style,
-        onMouseDown: function onMouseDown(event) {
-          var nextValue = (0, _interactions.onMouseDown)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props);
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-
-          _this2.handleViewerEvent(event);
-        },
-        onMouseMove: function onMouseMove(event) {
-          var _this2$ViewerDOM$getB = _this2.ViewerDOM.getBoundingClientRect(),
-              left = _this2$ViewerDOM$getB.left,
-              top = _this2$ViewerDOM$getB.top;
-
-          var x = event.clientX - Math.round(left);
-          var y = event.clientY - Math.round(top);
-          var nextValue = (0, _interactions.onMouseMove)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props, {
-            x: x,
-            y: y
-          });
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-
-          _this2.setState({
-            pointerX: x,
-            pointerY: y
-          });
-
-          _this2.handleViewerEvent(event);
-        },
-        onMouseUp: function onMouseUp(event) {
-          var nextValue = (0, _interactions.onMouseUp)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props);
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-
-          _this2.handleViewerEvent(event);
-        },
-        onClick: function onClick(event) {
-          _this2.handleViewerEvent(event);
-        },
-        onDoubleClick: function onDoubleClick(event) {
-          var nextValue = (0, _interactions.onDoubleClick)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props);
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-
-          _this2.handleViewerEvent(event);
-        },
-        onWheel: function onWheel(event) {
-          var nextValue = (0, _interactions.onWheel)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props);
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-        },
-        onMouseEnter: function onMouseEnter(event) {
-          if ((0, _detectTouch.default)()) return;
-          var nextValue = (0, _interactions.onMouseEnterOrLeave)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props);
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-        },
-        onMouseLeave: function onMouseLeave(event) {
-          var nextValue = (0, _interactions.onMouseEnterOrLeave)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props);
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-        },
-        onTouchStart: function onTouchStart(event) {
-          var nextValue = (0, _interactionsTouch.onTouchStart)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props);
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-
-          _this2.handleViewerEvent(event);
-        },
-        onTouchMove: function onTouchMove(event) {
-          var nextValue = (0, _interactionsTouch.onTouchMove)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props);
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-
-          _this2.handleViewerEvent(event);
-        },
-        onTouchEnd: function onTouchEnd(event) {
-          var nextValue = (0, _interactionsTouch.onTouchEnd)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props);
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-
-          _this2.handleViewerEvent(event);
-        },
-        onTouchCancel: function onTouchCancel(event) {
-          var nextValue = (0, _interactionsTouch.onTouchCancel)(event, _this2.ViewerDOM, _this2.getTool(), _this2.getValue(), _this2.props);
-          if (_this2.getValue() !== nextValue) _this2.setValue(nextValue);
-
-          _this2.handleViewerEvent(event);
-        }
-      }, _react.default.createElement("rect", {
-        fill: props.background,
-        x: 0,
-        y: 0,
-        width: value.viewerWidth,
-        height: value.viewerHeight,
-        style: {
-          pointerEvents: "none"
-        }
-      }), _react.default.createElement("g", {
-        transform: (0, _transformationMatrix.toSVG)(value),
-        style: blockChildEvents ? {
-          pointerEvents: "none"
-        } : {}
-      }, _react.default.createElement("rect", {
-        fill: this.props.SVGBackground,
-        style: this.props.SVGStyle,
-        x: value.SVGViewBoxX || 0,
-        y: value.SVGViewBoxY || 0,
-        width: value.SVGWidth,
-        height: value.SVGHeight
-      }), _react.default.createElement("g", null, props.children.props.children)), !([_constants.TOOL_NONE, _constants.TOOL_AUTO].indexOf(tool) >= 0 && props.detectAutoPan && value.focus) ? null : _react.default.createElement("g", {
-        style: {
-          pointerEvents: "none"
-        }
-      }, !(pointerY <= 20) ? null : _react.default.createElement(_borderGradient.default, {
-        direction: _constants.POSITION_TOP,
-        width: value.viewerWidth,
-        height: value.viewerHeight
-      }), !(value.viewerWidth - pointerX <= 20) ? null : _react.default.createElement(_borderGradient.default, {
-        direction: _constants.POSITION_RIGHT,
-        width: value.viewerWidth,
-        height: value.viewerHeight
-      }), !(value.viewerHeight - pointerY <= 20) ? null : _react.default.createElement(_borderGradient.default, {
-        direction: _constants.POSITION_BOTTOM,
-        width: value.viewerWidth,
-        height: value.viewerHeight
-      }), !(value.focus && pointerX <= 20) ? null : _react.default.createElement(_borderGradient.default, {
-        direction: _constants.POSITION_LEFT,
-        width: value.viewerWidth,
-        height: value.viewerHeight
-      })), !(value.mode === _constants.MODE_ZOOMING) ? null : _react.default.createElement(_selection.default, {
-        startX: value.startX,
-        startY: value.startY,
-        endX: value.endX,
-        endY: value.endY
-      })), props.toolbarProps.position === _constants.POSITION_NONE ? null : _react.default.createElement(CustomToolbar, _extends({}, this.props.toolbarProps, {
-        value: value,
-        onChangeValue: function onChangeValue(value) {
-          return _this2.setValue(value);
-        },
-        tool: tool,
-        onChangeTool: function onChangeTool(tool) {
-          return _this2.props.onChangeTool(tool);
-        }
-      })), props.miniatureProps.position === _constants.POSITION_NONE ? null : _react.default.createElement(CustomMiniature, _extends({}, this.props.miniatureProps, {
-        value: value,
-        onChangeValue: function onChangeValue(value) {
-          return _this2.setValue(value);
-        },
-        SVGBackground: this.props.SVGBackground
-      }), props.children.props.children));
-    }
-  }]);
-
-  return ReactSVGPanZoom;
-}(_react.default.Component);
-
-exports.default = ReactSVGPanZoom;
+  })), props.miniatureProps.position === _constants.POSITION_NONE ? null : _react.default.createElement(CustomMiniature, _extends({
+    viewer: viewer,
+    SVGAttributes: SVGAttributes,
+    miniatureOpen: miniatureOpen,
+    setMiniatureOpen: setMiniatureOpen,
+    matrix: matrix
+  }, props.miniatureProps, {
+    // value={value}
+    // onChangeValue={value => updateValue(value)}
+    SVGBackground: props.SVGBackground
+  }), props.children.props.children));
+});
 ReactSVGPanZoom.propTypes = {
   /**************************************************************************/
 
@@ -3412,35 +3299,12 @@ ReactSVGPanZoom.propTypes = {
   width: _propTypes.default.number.isRequired,
   //height of the viewer displayed on screen
   height: _propTypes.default.number.isRequired,
-  //value of the viewer (current camera view)
-  value: _propTypes.default.oneOfType([_propTypes.default.object, _propTypes.default.shape({
-    version: _propTypes.default.oneOf([2]).isRequired,
-    mode: _propTypes.default.oneOf([_constants.MODE_IDLE, _constants.MODE_PANNING, _constants.MODE_ZOOMING]).isRequired,
-    focus: _propTypes.default.bool.isRequired,
-    a: _propTypes.default.number.isRequired,
-    b: _propTypes.default.number.isRequired,
-    c: _propTypes.default.number.isRequired,
-    d: _propTypes.default.number.isRequired,
-    e: _propTypes.default.number.isRequired,
-    f: _propTypes.default.number.isRequired,
-    viewerWidth: _propTypes.default.number.isRequired,
-    viewerHeight: _propTypes.default.number.isRequired,
-    SVGViewBoxX: _propTypes.default.number.isRequired,
-    SVGViewBoxY: _propTypes.default.number.isRequired,
-    SVGWidth: _propTypes.default.number.isRequired,
-    SVGHeight: _propTypes.default.number.isRequired,
-    startX: _propTypes.default.number,
-    startY: _propTypes.default.number,
-    endX: _propTypes.default.number,
-    endY: _propTypes.default.number,
-    miniatureOpen: _propTypes.default.bool.isRequired
-  })]).isRequired,
   //handler something changed
-  onChangeValue: _propTypes.default.func.isRequired,
+  onChangeValue: _propTypes.default.func,
   //current active tool (TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT)
   tool: _propTypes.default.oneOf([_constants.TOOL_AUTO, _constants.TOOL_NONE, _constants.TOOL_PAN, _constants.TOOL_ZOOM_IN, _constants.TOOL_ZOOM_OUT]).isRequired,
   //handler tool changed
-  onChangeTool: _propTypes.default.func.isRequired,
+  onChangeTool: _propTypes.default.func,
 
   /**************************************************************************/
 
@@ -3551,8 +3415,8 @@ ReactSVGPanZoom.propTypes = {
       return new Error('`' + componentName + '` ' + 'should have a single child of the following types: ' + ' `' + types.join('`, `') + '`.');
     }
 
-    if ((!prop.props.hasOwnProperty('width') || !prop.props.hasOwnProperty('height')) && !prop.props.hasOwnProperty('withViewBox')) {
-      return new Error('SVG should have props `width` and `height` or `withViewBox`');
+    if ((!prop.props.hasOwnProperty('width') || !prop.props.hasOwnProperty('height')) && !prop.props.hasOwnProperty('viewBox')) {
+      return new Error('SVG should have props `width` and `height` or `viewBox`');
     }
   }
 };
@@ -3576,9 +3440,11 @@ ReactSVGPanZoom.defaultProps = {
   customMiniature: _miniature2.default,
   miniatureProps: {}
 };
+var _default = ReactSVGPanZoom;
+exports.default = _default;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3600,12 +3466,12 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var ViewerEvent =
 /*#__PURE__*/
 function () {
-  function ViewerEvent(originalEvent, value, SVGViewer) {
+  function ViewerEvent(originalEvent, matrix, boundingRect) {
     _classCallCheck(this, ViewerEvent);
 
     this.originalEvent = originalEvent;
-    this.value = value;
-    this.SVGViewer = SVGViewer;
+    this.matrix = matrix;
+    this.boundingRect = boundingRect;
   }
 
   _createClass(ViewerEvent, [{
@@ -3621,19 +3487,19 @@ function () {
   }, {
     key: "scaleFactor",
     get: function get() {
-      this._cacheDecomposedValue = this._cacheDecomposedValue || (0, _common.decompose)(this.value);
+      this._cacheDecomposedValue = this._cacheDecomposedValue || (0, _common.decompose)(this.matrix);
       return this._cacheDecomposedValue.scaleFactor;
     }
   }, {
     key: "translationX",
     get: function get() {
-      this._cacheDecomposedValue = this._cacheDecomposedValue || (0, _common.decompose)(this.value);
+      this._cacheDecomposedValue = this._cacheDecomposedValue || (0, _common.decompose)(this.matrix);
       return this._cacheDecomposedValue.translationX;
     }
   }, {
     key: "translationY",
     get: function get() {
-      this._cacheDecomposedValue = this._cacheDecomposedValue || (0, _common.decompose)(this.value);
+      this._cacheDecomposedValue = this._cacheDecomposedValue || (0, _common.decompose)(this.matrix);
       return this._cacheDecomposedValue.translationY;
     }
   }]);
@@ -3644,7 +3510,7 @@ function () {
 exports.default = ViewerEvent;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3659,7 +3525,6 @@ exports.onMouseUp = onMouseUp;
 exports.onDoubleClick = onDoubleClick;
 exports.onWheel = onWheel;
 exports.onMouseEnterOrLeave = onMouseEnterOrLeave;
-exports.onInterval = onInterval;
 
 var _constants = __webpack_require__(1);
 
@@ -3673,147 +3538,95 @@ var _mapRange = _interopRequireDefault(__webpack_require__(21));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function onMouseDown(event, ViewerDOM, tool, value, props) {
-  var coords = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
-  var x, y;
-
-  if (coords) {
-    x = coords.x;
-    y = coords.y;
-  } else {
-    var _ViewerDOM$getBoundin = ViewerDOM.getBoundingClientRect(),
-        left = _ViewerDOM$getBoundin.left,
-        top = _ViewerDOM$getBoundin.top;
-
-    x = event.clientX - Math.round(left);
-    y = event.clientY - Math.round(top);
-  }
-
-  var nextValue = value;
+function onMouseDown(event, boundingRect, matrix, tool, props, mode) {
+  var cursurPosition = (0, _common.getCursorPosition)(event, boundingRect);
+  var nextValue = {};
 
   switch (tool) {
     case _constants.TOOL_ZOOM_OUT:
-      var SVGPoint = (0, _common.getSVGPoint)(value, x, y);
-      nextValue = (0, _zoom.zoom)(value, SVGPoint.x, SVGPoint.y, 1 / props.scaleFactor, props);
+      var x = cursurPosition.x,
+          y = cursurPosition.y;
+      var SVGPoint = (0, _common.getSVGPoint)(x, y, matrix);
+      nextValue = (0, _zoom.zoom)(matrix, SVGPoint, 1 / props.scaleFactor);
       break;
 
     case _constants.TOOL_ZOOM_IN:
-      nextValue = (0, _zoom.startZooming)(value, x, y);
+      nextValue = (0, _zoom.startZooming)(cursurPosition);
       break;
 
     case _constants.TOOL_AUTO:
     case _constants.TOOL_PAN:
-      nextValue = (0, _pan.startPanning)(value, x, y);
+      nextValue = (0, _pan.startPanning)(cursurPosition);
       break;
 
     default:
-      return value;
+      return {};
   }
 
   event.preventDefault();
   return nextValue;
 }
 
-function onMouseMove(event, ViewerDOM, tool, value, props) {
-  var coords = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
-  var x, y;
-
-  if (coords) {
-    x = coords.x;
-    y = coords.y;
-  } else {
-    var _ViewerDOM$getBoundin2 = ViewerDOM.getBoundingClientRect(),
-        left = _ViewerDOM$getBoundin2.left,
-        top = _ViewerDOM$getBoundin2.top;
-
-    x = event.clientX - Math.round(left);
-    y = event.clientY - Math.round(top);
-  }
-
+function onMouseMove(event, boundingRect, matrix, tool, props, mode, start, end, viewer, SVGAttributes) {
+  var cursurPosition = (0, _common.getCursorPosition)(event, boundingRect);
   var forceExit = event.buttons === 0; //the mouse exited and reentered into svg
 
-  var nextValue = value;
+  var nextValue = {};
 
   switch (tool) {
     case _constants.TOOL_ZOOM_IN:
-      if (value.mode === _constants.MODE_ZOOMING) nextValue = forceExit ? (0, _zoom.stopZooming)(value, x, y, props.scaleFactor, props) : (0, _zoom.updateZooming)(value, x, y);
+      if (mode === _constants.MODE_ZOOMING) nextValue = forceExit ? (0, _zoom.stopZooming)(cursurPosition, start, end, matrix, props.scaleFactor, props, viewer) : (0, _zoom.updateZooming)(mode, cursurPosition);
       break;
 
     case _constants.TOOL_AUTO:
     case _constants.TOOL_PAN:
-      if (value.mode === _constants.MODE_PANNING) nextValue = forceExit ? (0, _pan.stopPanning)(value) : (0, _pan.updatePanning)(value, x, y, props.preventPanOutside ? 20 : undefined);
+      if (mode === _constants.MODE_PANNING) nextValue = forceExit ? (0, _pan.stopPanning)() : (0, _pan.updatePanning)(cursurPosition, start, end, matrix, props.preventPanOutside ? 20 : undefined, mode, viewer, SVGAttributes);
       break;
 
     default:
-      return value;
+      return {};
   }
 
   event.preventDefault();
   return nextValue;
 }
 
-function onMouseUp(event, ViewerDOM, tool, value, props) {
-  var coords = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
-  var x, y;
-
-  if (coords) {
-    x = coords.x;
-    y = coords.y;
-  } else {
-    var _ViewerDOM$getBoundin3 = ViewerDOM.getBoundingClientRect(),
-        left = _ViewerDOM$getBoundin3.left,
-        top = _ViewerDOM$getBoundin3.top;
-
-    x = event.clientX - Math.round(left);
-    y = event.clientY - Math.round(top);
-  }
-
-  var nextValue = value;
+function onMouseUp(event, boundingRect, matrix, tool, props, mode, start, end, viewer) {
+  var cursurPosition = (0, _common.getCursorPosition)(event, boundingRect);
+  var nextValue = {};
 
   switch (tool) {
     case _constants.TOOL_ZOOM_OUT:
-      if (value.mode === _constants.MODE_ZOOMING) nextValue = (0, _zoom.stopZooming)(value, x, y, 1 / props.scaleFactor, props);
+      if (mode === _constants.MODE_ZOOMING) nextValue = (0, _zoom.stopZooming)(cursurPosition, start, end, matrix, 1 / props.scaleFactor, props, viewer);
       break;
 
     case _constants.TOOL_ZOOM_IN:
-      if (value.mode === _constants.MODE_ZOOMING) nextValue = (0, _zoom.stopZooming)(value, x, y, props.scaleFactor, props);
+      if (mode === _constants.MODE_ZOOMING) nextValue = (0, _zoom.stopZooming)(cursurPosition, start, end, matrix, props.scaleFactor, props, viewer);
       break;
 
     case _constants.TOOL_AUTO:
     case _constants.TOOL_PAN:
-      if (value.mode === _constants.MODE_PANNING) nextValue = (0, _pan.stopPanning)(value, x, y);
+      if (mode === _constants.MODE_PANNING) nextValue = (0, _pan.stopPanning)();
       break;
 
     default:
-      return value;
+      return {};
   }
 
   event.preventDefault();
   return nextValue;
 }
 
-function onDoubleClick(event, ViewerDOM, tool, value, props) {
-  var coords = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
-  var x, y;
-
-  if (coords) {
-    x = coords.x;
-    y = coords.y;
-  } else {
-    var _ViewerDOM$getBoundin4 = ViewerDOM.getBoundingClientRect(),
-        left = _ViewerDOM$getBoundin4.left,
-        top = _ViewerDOM$getBoundin4.top;
-
-    x = event.clientX - Math.round(left);
-    y = event.clientY - Math.round(top);
-  }
-
-  var nextValue = value;
+function onDoubleClick(event, boundingRect, matrix, tool, props, mode) {
+  var cursurPosition = (0, _common.getCursorPosition)(event, boundingRect);
+  var x = cursurPosition.x,
+      y = cursurPosition.y;
+  var nextValue = {};
 
   switch (tool) {
     case _constants.TOOL_AUTO:
       if (!props.disableDoubleClickZoomWithToolAuto) {
-        var SVGPoint = (0, _common.getSVGPoint)(value, x, y);
+        var SVGPoint = (0, _common.getSVGPoint)(x, y);
 
         var modifierKeysReducer = function modifierKeysReducer(current, modifierKey) {
           return current || event.getModifierState(modifierKey);
@@ -3821,63 +3634,40 @@ function onDoubleClick(event, ViewerDOM, tool, value, props) {
 
         var modifierKeyActive = props.modifierKeys.reduce(modifierKeysReducer, false);
         var scaleFactor = modifierKeyActive ? 1 / props.scaleFactor : props.scaleFactor;
-        nextValue = (0, _zoom.zoom)(value, SVGPoint.x, SVGPoint.y, scaleFactor, props);
+        nextValue = (0, _zoom.zoom)(SVGPoint.x, SVGPoint.y, scaleFactor, props);
       }
 
       break;
 
     default:
-      return value;
+      return {};
   }
 
   event.preventDefault();
   return nextValue;
 }
 
-function onWheel(event, ViewerDOM, tool, value, props) {
-  var coords = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
-  var x, y;
-
-  if (coords) {
-    x = coords.x;
-    y = coords.y;
-  } else {
-    var _ViewerDOM$getBoundin5 = ViewerDOM.getBoundingClientRect(),
-        left = _ViewerDOM$getBoundin5.left,
-        top = _ViewerDOM$getBoundin5.top;
-
-    x = event.clientX - Math.round(left);
-    y = event.clientY - Math.round(top);
-  }
-
-  if (!props.detectWheel) return value;
+function onWheel(event, boundingRect, matrix, tool, props, mode) {
+  var cursurPosition = (0, _common.getCursorPosition)(event, boundingRect);
+  var x = cursurPosition.x,
+      y = cursurPosition.y;
+  if (!props.detectWheel) return {};
   var delta = Math.max(-1, Math.min(1, event.deltaY));
   var scaleFactor = (0, _mapRange.default)(delta, -1, 1, props.scaleFactorOnWheel, 1 / props.scaleFactorOnWheel);
-  var SVGPoint = (0, _common.getSVGPoint)(value, x, y);
-  var nextValue = (0, _zoom.zoom)(value, SVGPoint.x, SVGPoint.y, scaleFactor, props);
+  var SVGPoint = (0, _common.getSVGPoint)(x, y, matrix);
   event.preventDefault();
-  return nextValue;
+  return (0, _zoom.zoom)(matrix, SVGPoint, scaleFactor);
 }
 
-function onMouseEnterOrLeave(event, ViewerDOM, tool, value, props) {
-  var coords = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
-  var nextValue = (0, _common.setFocus)(value, event.type === 'mouseenter');
+function onMouseEnterOrLeave(event, boundingRect, matrix, tool, props, mode) {
   event.preventDefault();
-  return nextValue;
-}
-
-function onInterval(event, ViewerDOM, tool, value, props) {
-  var coords = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : null;
-  var x = coords.x,
-      y = coords.y;
-  if (!([_constants.TOOL_NONE, _constants.TOOL_AUTO].indexOf(tool) >= 0)) return value;
-  if (!props.detectAutoPan) return value;
-  if (!value.focus) return value;
-  return (0, _pan.autoPanIfNeeded)(value, x, y);
+  return {
+    focus: event.type === 'mouseenter'
+  };
 }
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3921,7 +3711,7 @@ function calculateBox(start, end) {
 }
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3932,31 +3722,25 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = RandomUID;
 
-var _react = _interopRequireDefault(__webpack_require__(0));
+var _react = _interopRequireWildcard(__webpack_require__(0));
 
-var _getDisplayName = _interopRequireDefault(__webpack_require__(25));
+var _getDisplayName = _interopRequireDefault(__webpack_require__(26));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; if (obj != null) { var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 var uid = 1;
 
@@ -3965,41 +3749,23 @@ var nextUID = function nextUID() {
 };
 
 function RandomUID(WrappedComponent) {
-  var RandomUID =
-  /*#__PURE__*/
-  function (_React$Component) {
-    _inherits(RandomUID, _React$Component);
+  var RandomUID = function RandomUID(props) {
+    var _useState = (0, _react.useState)(nextUID()),
+        _useState2 = _slicedToArray(_useState, 2),
+        uid = _useState2[0],
+        setUID = _useState2[1];
 
-    function RandomUID(props) {
-      var _this;
-
-      _classCallCheck(this, RandomUID);
-
-      _this = _possibleConstructorReturn(this, _getPrototypeOf(RandomUID).call(this, props));
-      _this.state = {
-        uid: nextUID()
-      };
-      return _this;
-    }
-
-    _createClass(RandomUID, [{
-      key: "render",
-      value: function render() {
-        return _react.default.createElement(WrappedComponent, _extends({
-          _uid: this.state.uid
-        }, this.props));
-      }
-    }]);
-
-    return RandomUID;
-  }(_react.default.Component);
+    return _react.default.createElement(WrappedComponent, _extends({
+      _uid: uid
+    }, props));
+  };
 
   RandomUID.displayName = "RandomUID(".concat((0, _getDisplayName.default)(WrappedComponent), ")");
   return RandomUID;
 }
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4016,28 +3782,25 @@ var _propTypes = _interopRequireDefault(__webpack_require__(2));
 
 var _constants = __webpack_require__(1);
 
-var _zoom = __webpack_require__(5);
+var _iconCursor = _interopRequireDefault(__webpack_require__(28));
 
-var _iconCursor = _interopRequireDefault(__webpack_require__(27));
+var _iconPan = _interopRequireDefault(__webpack_require__(29));
 
-var _iconPan = _interopRequireDefault(__webpack_require__(28));
+var _iconZoomIn = _interopRequireDefault(__webpack_require__(30));
 
-var _iconZoomIn = _interopRequireDefault(__webpack_require__(29));
+var _iconZoomOut = _interopRequireDefault(__webpack_require__(31));
 
-var _iconZoomOut = _interopRequireDefault(__webpack_require__(30));
+var _iconFit = _interopRequireDefault(__webpack_require__(32));
 
-var _iconFit = _interopRequireDefault(__webpack_require__(31));
-
-var _toolbarButton = _interopRequireDefault(__webpack_require__(32));
+var _toolbarButton = _interopRequireDefault(__webpack_require__(33));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function Toolbar(_ref) {
   var tool = _ref.tool,
-      value = _ref.value,
-      onChangeValue = _ref.onChangeValue,
       onChangeTool = _ref.onChangeTool,
       position = _ref.position,
+      fitToViewer = _ref.fitToViewer,
       SVGAlignX = _ref.SVGAlignX,
       SVGAlignY = _ref.SVGAlignY;
 
@@ -4048,7 +3811,7 @@ function Toolbar(_ref) {
   };
 
   var handleFit = function handleFit(event) {
-    onChangeValue((0, _zoom.fitToViewer)(value, SVGAlignX, SVGAlignY));
+    fitToViewer(SVGAlignX, SVGAlignY);
     event.stopPropagation();
     event.preventDefault();
   };
@@ -4118,21 +3881,16 @@ function Toolbar(_ref) {
 Toolbar.propTypes = {
   tool: _propTypes.default.string.isRequired,
   onChangeTool: _propTypes.default.func.isRequired,
-  value: _propTypes.default.object.isRequired,
-  onChangeValue: _propTypes.default.func.isRequired,
+  // onChangeValue: PropTypes.func.isRequired,
   //customizations
-  position: _propTypes.default.oneOf([_constants.POSITION_TOP, _constants.POSITION_RIGHT, _constants.POSITION_BOTTOM, _constants.POSITION_LEFT]),
-  SVGAlignX: _propTypes.default.oneOf([_constants.ALIGN_CENTER, _constants.ALIGN_LEFT, _constants.ALIGN_RIGHT]),
-  SVGAlignY: _propTypes.default.oneOf([_constants.ALIGN_CENTER, _constants.ALIGN_TOP, _constants.ALIGN_BOTTOM])
+  position: _propTypes.default.oneOf([_constants.POSITION_TOP, _constants.POSITION_RIGHT, _constants.POSITION_BOTTOM, _constants.POSITION_LEFT])
 };
 Toolbar.defaultProps = {
-  position: _constants.POSITION_RIGHT,
-  SVGAlignX: _constants.ALIGN_LEFT,
-  SVGAlignY: _constants.ALIGN_TOP
+  position: _constants.POSITION_RIGHT
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4151,9 +3909,9 @@ var _constants = __webpack_require__(1);
 
 var _transformationMatrix = __webpack_require__(4);
 
-var _miniatureToggleButton = _interopRequireDefault(__webpack_require__(34));
+var _miniatureToggleButton = _interopRequireDefault(__webpack_require__(35));
 
-var _miniatureMask = _interopRequireDefault(__webpack_require__(36));
+var _miniatureMask = _interopRequireDefault(__webpack_require__(37));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4163,7 +3921,7 @@ function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArra
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
@@ -4173,7 +3931,9 @@ var min = Math.min,
 function Miniature(props) {
   var _style;
 
-  var value = props.value,
+  var miniatureOpen = props.miniatureOpen,
+      setMiniatureOpen = props.setMiniatureOpen,
+      matrix = props.matrix,
       onChangeValue = props.onChangeValue,
       children = props.children,
       position = props.position,
@@ -4181,16 +3941,18 @@ function Miniature(props) {
       SVGBackground = props.SVGBackground,
       miniatureWidth = props.width,
       miniatureHeight = props.height;
-  var SVGViewBoxX = value.SVGViewBoxX,
-      SVGViewBoxY = value.SVGViewBoxY,
-      SVGWidth = value.SVGWidth,
-      SVGHeight = value.SVGHeight,
-      viewerWidth = value.viewerWidth,
-      viewerHeight = value.viewerHeight;
+  var _props$viewer = props.viewer,
+      viewerWidth = _props$viewer.viewerWidth,
+      viewerHeight = _props$viewer.viewerHeight;
+  var _props$SVGAttributes = props.SVGAttributes,
+      SVGMinX = _props$SVGAttributes.SVGMinX,
+      SVGMinY = _props$SVGAttributes.SVGMinY,
+      SVGWidth = _props$SVGAttributes.SVGWidth,
+      SVGHeight = _props$SVGAttributes.SVGHeight;
   var ratio = SVGHeight / SVGWidth;
   var zoomToFit = ratio >= 1 ? miniatureHeight / SVGHeight : miniatureWidth / SVGWidth;
 
-  var _applyToPoints = (0, _transformationMatrix.applyToPoints)((0, _transformationMatrix.inverse)(value), [{
+  var _applyToPoints = (0, _transformationMatrix.applyToPoints)((0, _transformationMatrix.inverse)(matrix), [{
     x: 0,
     y: 0
   }, {
@@ -4207,7 +3969,7 @@ function Miniature(props) {
 
   var width, height;
 
-  if (value.miniatureOpen) {
+  if (miniatureOpen) {
     width = miniatureWidth;
     height = miniatureHeight;
   } else {
@@ -4224,7 +3986,7 @@ function Miniature(props) {
     height: height + "px",
     bottom: "6px"
   }, _defineProperty(_style, position === _constants.POSITION_LEFT ? 'left' : 'right', "6px"), _defineProperty(_style, "background", background), _style);
-  var centerTranslation = ratio >= 1 ? "translate(".concat((miniatureWidth - SVGWidth * zoomToFit) / 2 - SVGViewBoxX * zoomToFit, ", ").concat(-SVGViewBoxY * zoomToFit, ")") : "translate(".concat(-SVGViewBoxX * zoomToFit, ", ").concat((miniatureHeight - SVGHeight * zoomToFit) / 2 - SVGViewBoxY * zoomToFit, ")");
+  var centerTranslation = ratio >= 1 ? "translate(".concat((miniatureWidth - SVGWidth * zoomToFit) / 2 - SVGMinX * zoomToFit, ", ").concat(-SVGMinY * zoomToFit, ")") : "translate(".concat(-SVGMinX * zoomToFit, ", ").concat((miniatureHeight - SVGHeight * zoomToFit) / 2 - SVGMinY * zoomToFit, ")");
   return _react.default.createElement("div", {
     role: "navigation",
     style: style
@@ -4240,30 +4002,29 @@ function Miniature(props) {
     transform: "scale(".concat(zoomToFit, ", ").concat(zoomToFit, ")")
   }, _react.default.createElement("rect", {
     fill: SVGBackground,
-    x: SVGViewBoxX,
-    y: SVGViewBoxY,
+    x: SVGMinX,
+    y: SVGMinY,
     width: SVGWidth,
     height: SVGHeight
   }), children, _react.default.createElement(_miniatureMask.default, {
     SVGWidth: SVGWidth,
     SVGHeight: SVGHeight,
-    SVGViewBoxX: SVGViewBoxX,
-    SVGViewBoxY: SVGViewBoxY,
+    SVGMinX: SVGMinX,
+    SVGMinY: SVGMinY,
     x1: x1,
     y1: y1,
     x2: x2,
     y2: y2,
     zoomToFit: zoomToFit
   })))), _react.default.createElement(_miniatureToggleButton.default, {
-    value: value,
-    onChangeValue: onChangeValue,
+    miniatureOpen: miniatureOpen,
+    setMiniatureOpen: setMiniatureOpen,
     position: position
   }));
 }
 
 Miniature.propTypes = {
-  value: _propTypes.default.object.isRequired,
-  onChangeValue: _propTypes.default.func.isRequired,
+  // onChangeValue: PropTypes.func.isRequired,
   SVGBackground: _propTypes.default.string.isRequired,
   //customizations
   position: _propTypes.default.oneOf([_constants.POSITION_RIGHT, _constants.POSITION_LEFT]),
@@ -4279,7 +4040,7 @@ Miniature.defaultProps = {
 };
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4386,13 +4147,13 @@ exports.Viewer = void 0;
 
 var _migrationTips = __webpack_require__(8);
 
-var _viewer = _interopRequireDefault(__webpack_require__(9));
+var _viewer = _interopRequireDefault(__webpack_require__(10));
 
-var _uncontrolledViewer = _interopRequireDefault(__webpack_require__(37));
+var _uncontrolledViewer = _interopRequireDefault(__webpack_require__(38));
 
-var _toolbar = _interopRequireDefault(__webpack_require__(14));
+var _toolbar = _interopRequireDefault(__webpack_require__(15));
 
-var _miniature = _interopRequireDefault(__webpack_require__(15));
+var _miniature = _interopRequireDefault(__webpack_require__(16));
 
 var _common = __webpack_require__(3);
 
@@ -4425,22 +4186,6 @@ var Viewer = function Viewer() {
 exports.Viewer = Viewer;
 
 /***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.isNullOrUndefined = isNullOrUndefined;
-
-function isNullOrUndefined(value) {
-  return typeof value === 'undefined' || value === null;
-}
-
-/***/ }),
 /* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -4458,7 +4203,7 @@ var _viewerTouchEvent = _interopRequireDefault(__webpack_require__(20));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _default(originalEvent, value, SVGViewer) {
+function _default(originalEvent, matrix, boundingRect) {
   var eventType = originalEvent.type;
 
   switch (eventType) {
@@ -4467,13 +4212,13 @@ function _default(originalEvent, value, SVGViewer) {
     case "mousedown":
     case "click":
     case "dblclick":
-      return new _viewerMouseEvent.default(originalEvent, value, SVGViewer);
+      return new _viewerMouseEvent.default(originalEvent, matrix, boundingRect);
 
     case "touchstart":
     case "touchmove":
     case "touchend":
     case "touchcancel":
-      return new _viewerTouchEvent.default(originalEvent, value, SVGViewer);
+      return new _viewerTouchEvent.default(originalEvent, matrix, boundingRect);
 
     default:
       throw new Error("".concat(eventType, " not supported"));
@@ -4494,7 +4239,7 @@ exports.default = void 0;
 
 var _common = __webpack_require__(3);
 
-var _viewerEvent = _interopRequireDefault(__webpack_require__(10));
+var _viewerEvent = _interopRequireDefault(__webpack_require__(11));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4532,12 +4277,11 @@ function (_ViewerEvent) {
     get: function get() {
       if (!this._cachePoint) {
         var event = this.originalEvent,
-            value = this.value,
-            SVGViewer = this.SVGViewer;
-        var rect = SVGViewer.getBoundingClientRect();
-        var x = event.clientX - Math.round(rect.left);
-        var y = event.clientY - Math.round(rect.top);
-        this._cachePoint = (0, _common.getSVGPoint)(value, x, y);
+            matrix = this.matrix,
+            boundingRect = this.boundingRect;
+        var x = event.clientX - Math.round(boundingRect.left);
+        var y = event.clientY - Math.round(boundingRect.top);
+        this._cachePoint = (0, _common.getSVGPoint)(x, y, matrix);
       }
 
       return this._cachePoint;
@@ -4573,7 +4317,7 @@ exports.default = void 0;
 
 var _common = __webpack_require__(3);
 
-var _viewerEvent = _interopRequireDefault(__webpack_require__(10));
+var _viewerEvent = _interopRequireDefault(__webpack_require__(11));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -4615,26 +4359,25 @@ function (_ViewerEvent) {
   _createClass(ViewerTouchEvent, [{
     key: "points",
     get: function get() {
-      if (!this._cachePoints) this._cachePoints = ViewerTouchEvent.touchesToPoints(this.originalEvent.touches, this.SVGViewer, this.value);
+      if (!this._cachePoints) this._cachePoints = ViewerTouchEvent.touchesToPoints(this.originalEvent.touches, this.boundingRect, this.matrix);
       return this._cachePoints;
     }
   }, {
     key: "changedPoints",
     get: function get() {
-      if (!this._cacheChangedPoints) this._cacheChangedPoints = ViewerTouchEvent.touchesToPoints(this.originalEvent.changedTouches, this.SVGViewer, this.value);
+      if (!this._cacheChangedPoints) this._cacheChangedPoints = ViewerTouchEvent.touchesToPoints(this.originalEvent.changedTouches, this.boundingRect, this.matrix);
       return this._cacheChangedPoints;
     }
   }], [{
     key: "touchesToPoints",
-    value: function touchesToPoints(touches, SVGViewer, value) {
+    value: function touchesToPoints(touches, boundingRect, matrix) {
       var points = [];
 
       for (var i = 0; i < touches.length; i++) {
         var touch = touches[i];
-        var rect = SVGViewer.getBoundingClientRect();
-        var x = touch.clientX - Math.round(rect.left);
-        var y = touch.clientY - Math.round(rect.top);
-        var point = (0, _common.getSVGPoint)(value, x, y);
+        var x = touch.clientX - Math.round(boundingRect.left);
+        var y = touch.clientY - Math.round(boundingRect.top);
+        var point = (0, _common.getSVGPoint)(x, y, matrix);
         points.push(_objectSpread({}, point, {
           identifier: touch.identifier
         }));
@@ -4675,6 +4418,43 @@ function mapRange(value, low1, high1, low2, high2) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = parseViewBox;
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var HASH_MAP = {
+  0: 'SVGMinX',
+  1: 'SVGMinY',
+  2: 'SVGWidth',
+  3: 'SVGHeight'
+};
+
+function parseViewBox(viewBoxString) {
+  // viewBox specs: https://www.w3.org/TR/SVG/coords.html#ViewBoxAttribute
+  return viewBoxString && viewBoxString.split(/[ ,]/) // split optional comma
+  .filter(Boolean) // remove empty strings
+  .map(Number) // cast to Number
+  .map(function (value, index) {
+    return _defineProperty({}, HASH_MAP[index], value);
+  }).reduce(function (val, acc) {
+    return _objectSpread({}, acc, {}, val);
+  }, {});
+}
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.onTouchStart = onTouchStart;
 exports.onTouchMove = onTouchMove;
 exports.onTouchEnd = onTouchEnd;
@@ -4686,7 +4466,7 @@ var _constants = __webpack_require__(1);
 
 var _common = __webpack_require__(3);
 
-var _interactions = __webpack_require__(11);
+var _interactions = __webpack_require__(12);
 
 var _zoom = __webpack_require__(5);
 
@@ -4696,59 +4476,54 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function hasPinchPointDistance(value) {
-  return typeof value.pinchPointDistance === 'number';
+function hasPinchPointDistance(pinchPointDistance) {
+  return typeof pinchPointDistance === 'number';
 }
 
-function onMultiTouch(event, ViewerDOM, tool, value, props) {
-  var _ViewerDOM$getBoundin = ViewerDOM.getBoundingClientRect(),
-      left = _ViewerDOM$getBoundin.left,
-      top = _ViewerDOM$getBoundin.top;
-
+function onMultiTouch(event, boundingRect, matrix, tool, props, mode, prePinchMode) {
+  var left = boundingRect.left,
+      top = boundingRect.top;
   var x1 = event.touches[0].clientX - Math.round(left);
   var y1 = event.touches[0].clientY - Math.round(top);
   var x2 = event.touches[1].clientX - Math.round(left);
   var y2 = event.touches[1].clientY - Math.round(top);
-  var pinchPointDistance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-  var previousPointDistance = hasPinchPointDistance(value) ? value.pinchPointDistance : pinchPointDistance;
-  var svgPoint = (0, _common.getSVGPoint)(value, (x1 + x2) / 2, (y1 + y2) / 2);
+  var thisPinchPointDistance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  var previousPointDistance = hasPinchPointDistance(pinchPointDistance) ? pinchPointDistance : thisPinchPointDistance;
+  var svgPoint = (0, _common.getSVGPoint)((x1 + x2) / 2, (y1 + y2) / 2, matrix);
   var distanceFactor = pinchPointDistance / previousPointDistance;
 
-  if ((0, _zoom.isZoomLevelGoingOutOfBounds)(value, distanceFactor)) {
-    // Do not change translation and scale of value
-    return value;
+  if ((0, _zoom.isZoomLevelGoingOutOfBounds)(distanceFactor)) {
+    return {};
   }
 
   if (event.cancelable) {
     event.preventDefault();
   }
 
-  var matrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.fromObject)(value), (0, _transformationMatrix.translate)(svgPoint.x, svgPoint.y), (0, _transformationMatrix.scale)(distanceFactor, distanceFactor), (0, _transformationMatrix.translate)(-svgPoint.x, -svgPoint.y));
-  return (0, _common.set)(value, (0, _common.set)(_objectSpread({
+  var newMatrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.fromObject)(matrix), (0, _transformationMatrix.translate)(svgPoint.x, svgPoint.y), (0, _transformationMatrix.scale)(distanceFactor, distanceFactor), (0, _transformationMatrix.translate)(-svgPoint.x, -svgPoint.y));
+  return _objectSpread({
     mode: _constants.MODE_ZOOMING
-  }, (0, _zoom.limitZoomLevel)(value, matrix), {
+  }, (0, _zoom.limitZoomLevel)(newMatrix), {
     startX: null,
     startY: null,
     endX: null,
     endY: null,
-    prePinchMode: value.prePinchMode ? value.prePinchMode : value.mode,
+    prePinchMode: prePinchMode ? prePinchMode : mode,
     pinchPointDistance: pinchPointDistance
-  })));
+  });
 }
 
 function isMultiTouch(event, props) {
   return props.detectPinchGesture && event.touches.length > 1;
 }
 
-function shouldResetPinchPointDistance(event, value, props) {
-  return props.detectPinchGesture && hasPinchPointDistance(value) && event.touches.length < 2;
+function shouldResetPinchPointDistance(event, pinchPointDistance, props) {
+  return props.detectPinchGesture && hasPinchPointDistance(pinchPointDistance) && event.touches.length < 2;
 }
 
-function getTouchPosition(touch, ViewerDOM) {
-  var _ViewerDOM$getBoundin2 = ViewerDOM.getBoundingClientRect(),
-      left = _ViewerDOM$getBoundin2.left,
-      top = _ViewerDOM$getBoundin2.top;
-
+function getTouchPosition(touch, boundingRect) {
+  var left = boundingRect.left,
+      top = boundingRect.top;
   var x = touch.clientX - Math.round(left);
   var y = touch.clientY - Math.round(top);
   return {
@@ -4757,13 +4532,13 @@ function getTouchPosition(touch, ViewerDOM) {
   };
 }
 
-function getNextValue(event, ViewerDOM, tool, value, props, nextValueFn) {
-  var nextValue = event.touches.length === 0 ? (0, _common.set)(value, {
-    mode: value.prePinchMode ? _constants.MODE_IDLE : value.mode,
+function getNextValue(event, boundingRect, matrix, tool, props, mode, prePinchMode, nextValueFn) {
+  var nextValue = event.touches.length === 0 ? {
+    mode: prePinchMode ? _constants.MODE_IDLE : mode,
     prePinchMode: null
-  }) : value;
+  } : {};
   var touch = event.touches.length > 0 ? event.touches[0] : event.changedTouches[0];
-  var touchPosition = getTouchPosition(touch, ViewerDOM);
+  var touchPosition = getTouchPosition(touch, boundingRect);
 
   switch (tool) {
     case _constants.TOOL_ZOOM_OUT:
@@ -4772,65 +4547,65 @@ function getNextValue(event, ViewerDOM, tool, value, props, nextValueFn) {
     case _constants.TOOL_PAN:
       event.stopPropagation();
       event.preventDefault();
-      return nextValueFn(event, ViewerDOM, tool, nextValue, props, touchPosition);
+      return nextValueFn(event, boundingRect, tool, nextValue, props, touchPosition);
 
     default:
       return nextValue;
   }
 }
 
-function onTouchStart(event, ViewerDOM, tool, value, props) {
+function onTouchStart(event, boundingRect, matrix, tool, props, mode) {
   if (isMultiTouch(event, props)) {
-    return onMultiTouch(event, ViewerDOM, tool, value, props);
+    return onMultiTouch(event, boundingRect, tool, props);
   }
 
   if (event.touches.length !== 1) {
-    if ([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(value.mode) >= 0) {
-      return (0, _common.resetMode)(value);
-    } else if ([_constants.MODE_IDLE].indexOf(value.mode) >= 0) {
-      return value;
+    if ([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(mode) >= 0) {
+      return (0, _common.resetMode)();
+    } else if ([_constants.MODE_IDLE].indexOf(mode) >= 0) {
+      return {};
     }
   }
 
-  return getNextValue(event, ViewerDOM, tool, value, props, _interactions.onMouseDown);
+  return getNextValue(event, boundingRect, tool, props, _interactions.onMouseDown);
 }
 
-function onTouchMove(event, ViewerDOM, tool, value, props) {
+function onTouchMove(event, boundingRect, matrix, tool, props, mode) {
   if (isMultiTouch(event, props)) {
-    return onMultiTouch(event, ViewerDOM, tool, value, props);
+    return onMultiTouch(event, boundingRect, tool, props);
   }
 
-  if (!([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(value.mode) >= 0)) {
-    return value;
+  if (!([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(mode) >= 0)) {
+    return {};
   }
 
-  return getNextValue(event, ViewerDOM, tool, value, props, _interactions.onMouseMove);
+  return getNextValue(event, boundingRect, tool, props, _interactions.onMouseMove);
 }
 
-function onTouchEnd(event, ViewerDOM, tool, value, props) {
-  if (!([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(value.mode) >= 0)) {
-    return value;
+function onTouchEnd(event, boundingRect, matrix, tool, props, mode, pinchPointDistance) {
+  if (!([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(mode) >= 0)) {
+    return {};
   }
 
-  var nextValue = shouldResetPinchPointDistance(event, value, props) ? (0, _common.set)(value, {
+  var nextValue = shouldResetPinchPointDistance(event, pinchPointDistance, props) ? {
     pinchPointDistance: null
-  }) : value;
+  } : {};
 
   if (event.touches.length > 0) {
     return nextValue;
   }
 
-  return getNextValue(event, ViewerDOM, tool, nextValue, props, _interactions.onMouseUp);
+  return getNextValue(event, boundingRect, tool, nextValue, props, _interactions.onMouseUp);
 }
 
-function onTouchCancel(event, ViewerDOM, tool, value, props) {
+function onTouchCancel(event, boundingRect, tool, props) {
   event.stopPropagation();
   event.preventDefault();
-  return (0, _common.resetMode)(value);
+  return (0, _common.resetMode)();
 }
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4865,7 +4640,7 @@ function _default(cursor) {
 }
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4876,15 +4651,27 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _react = _interopRequireDefault(__webpack_require__(0));
+var _react = _interopRequireWildcard(__webpack_require__(0));
 
 var _propTypes = _interopRequireDefault(__webpack_require__(2));
 
 var _constants = __webpack_require__(1);
 
-var _RandomUID = _interopRequireDefault(__webpack_require__(13));
+var _RandomUID = _interopRequireDefault(__webpack_require__(14));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; if (obj != null) { var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 var prefixID = 'react-svg-pan-zoom_border_gradient';
 
@@ -4892,7 +4679,14 @@ function BorderGradient(_ref) {
   var direction = _ref.direction,
       width = _ref.width,
       height = _ref.height,
-      _uid = _ref._uid;
+      _uid = _ref._uid,
+      setAutoPanHover = _ref.setAutoPanHover;
+
+  var _useState = (0, _react.useState)(false),
+      _useState2 = _slicedToArray(_useState, 2),
+      hover = _useState2[0],
+      setHover = _useState2[1];
+
   var transform;
 
   switch (direction) {
@@ -4953,9 +4747,18 @@ function BorderGradient(_ref) {
     style: {
       stroke: "none",
       fill: "#000",
-      mask: "url(#".concat(maskID, ")")
+      mask: "url(#".concat(maskID, ")"),
+      opacity: hover ? 1 : 0
     },
-    transform: transform
+    transform: transform,
+    onMouseEnter: function onMouseEnter() {
+      setHover(true);
+      setAutoPanHover(direction);
+    },
+    onMouseLeave: function onMouseLeave() {
+      setHover(false);
+      setAutoPanHover(_constants.POSITION_NONE);
+    }
   }));
 }
 
@@ -4970,7 +4773,7 @@ var _default = (0, _RandomUID.default)(BorderGradient);
 exports.default = _default;
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4987,7 +4790,7 @@ function getDisplayName(WrappedComponent) {
 }
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5002,7 +4805,7 @@ var _react = _interopRequireDefault(__webpack_require__(0));
 
 var _propTypes = _interopRequireDefault(__webpack_require__(2));
 
-var _calculateBox = _interopRequireDefault(__webpack_require__(12));
+var _calculateBox = _interopRequireDefault(__webpack_require__(13));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5042,7 +4845,7 @@ Selection.propTypes = {
 };
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5069,7 +4872,7 @@ function IconCursor() {
 }
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5096,7 +4899,7 @@ function IconPan() {
 }
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5125,7 +4928,7 @@ function IconZoomIn() {
 }
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5152,7 +4955,7 @@ function IconZoomOut() {
 }
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5179,7 +4982,7 @@ function IconFit() {
 }
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5190,7 +4993,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _react = _interopRequireDefault(__webpack_require__(0));
+var _react = _interopRequireWildcard(__webpack_require__(0));
 
 var _propTypes = _interopRequireDefault(__webpack_require__(2));
 
@@ -5198,114 +5001,87 @@ var _constants = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; if (obj != null) { var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+var ToolbarButton = function ToolbarButton(props) {
+  var _useState = (0, _react.useState)(false),
+      _useState2 = _slicedToArray(_useState, 2),
+      hover = _useState2[0],
+      setHover = _useState2[1];
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+  function change(event) {
+    event.preventDefault();
+    event.stopPropagation();
 
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+    switch (event.type) {
+      case 'mouseenter':
+      case 'touchstart':
+        setHover(true);
+        break;
 
-var ToolbarButton =
-/*#__PURE__*/
-function (_React$Component) {
-  _inherits(ToolbarButton, _React$Component);
-
-  function ToolbarButton(props) {
-    var _this;
-
-    _classCallCheck(this, ToolbarButton);
-
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(ToolbarButton).call(this, props));
-    _this.state = {
-      hover: false
-    };
-    return _this;
+      case 'mouseleave':
+      case 'touchend':
+      case 'touchcancel':
+        setHover(false);
+        break;
+    }
   }
 
-  _createClass(ToolbarButton, [{
-    key: "change",
-    value: function change(event) {
-      event.preventDefault();
-      event.stopPropagation();
+  var title = props.title,
+      name = props.name,
+      active = props.active,
+      toolbarPosition = props.toolbarPosition,
+      onClick = props.onClick,
+      children = props.children;
+  var style = {
+    display: "block",
+    width: "24px",
+    height: "24px",
+    margin: [_constants.POSITION_TOP, _constants.POSITION_BOTTOM].indexOf(toolbarPosition) >= 0 ? "2px 1px" : "1px 2px",
+    color: active || hover ? '#1CA6FC' : '#FFF',
+    transition: "color 200ms ease",
+    background: "none",
+    padding: "0px",
+    border: "0px",
+    outline: "0px",
+    cursor: "pointer"
+  };
+  return _react.default.createElement("button", {
+    onMouseEnter: function onMouseEnter(e) {
+      return change(e);
+    },
+    onMouseLeave: function onMouseLeave(e) {
+      return change(e);
+    },
+    onTouchStart: function onTouchStart(e) {
+      change(e);
+      onClick(e);
+    },
+    onTouchEnd: function onTouchEnd(e) {
+      return change(e);
+    },
+    onTouchCancel: function onTouchCancel(e) {
+      return change(e);
+    },
+    onClick: onClick,
+    style: style,
+    title: title,
+    name: name,
+    role: "button",
+    type: "button"
+  }, children);
+};
 
-      switch (event.type) {
-        case 'mouseenter':
-        case 'touchstart':
-          this.setState({
-            hover: true
-          });
-          break;
-
-        case 'mouseleave':
-        case 'touchend':
-        case 'touchcancel':
-          this.setState({
-            hover: false
-          });
-          break;
-      }
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _this2 = this;
-
-      var style = {
-        display: "block",
-        width: "24px",
-        height: "24px",
-        margin: [_constants.POSITION_TOP, _constants.POSITION_BOTTOM].indexOf(this.props.toolbarPosition) >= 0 ? "2px 1px" : "1px 2px",
-        color: this.props.active || this.state.hover ? '#1CA6FC' : '#FFF',
-        transition: "color 200ms ease",
-        background: "none",
-        padding: "0px",
-        border: "0px",
-        outline: "0px",
-        cursor: "pointer"
-      };
-      return _react.default.createElement("button", {
-        onMouseEnter: function onMouseEnter(e) {
-          return _this2.change(e);
-        },
-        onMouseLeave: function onMouseLeave(e) {
-          return _this2.change(e);
-        },
-        onTouchStart: function onTouchStart(e) {
-          _this2.change(e);
-
-          _this2.props.onClick(e);
-        },
-        onTouchEnd: function onTouchEnd(e) {
-          return _this2.change(e);
-        },
-        onTouchCancel: function onTouchCancel(e) {
-          return _this2.change(e);
-        },
-        onClick: this.props.onClick,
-        style: style,
-        title: this.props.title,
-        name: this.props.name,
-        role: "button",
-        type: "button"
-      }, this.props.children);
-    }
-  }]);
-
-  return ToolbarButton;
-}(_react.default.Component);
-
-exports.default = ToolbarButton;
 ToolbarButton.propTypes = {
   title: _propTypes.default.string.isRequired,
   name: _propTypes.default.string.isRequired,
@@ -5313,9 +5089,11 @@ ToolbarButton.propTypes = {
   onClick: _propTypes.default.func.isRequired,
   active: _propTypes.default.bool.isRequired
 };
+var _default = ToolbarButton;
+exports.default = _default;
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5335,7 +5113,7 @@ function isTouchDevice() {
 ;
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5352,7 +5130,7 @@ var _propTypes = _interopRequireDefault(__webpack_require__(2));
 
 var _miniature = __webpack_require__(7);
 
-var _iconArrow = _interopRequireDefault(__webpack_require__(35));
+var _iconArrow = _interopRequireDefault(__webpack_require__(36));
 
 var _constants = __webpack_require__(1);
 
@@ -5363,9 +5141,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 function MiniatureToggleButton(_ref) {
   var _style;
 
-  var value = _ref.value,
-      onChangeValue = _ref.onChangeValue,
-      position = _ref.position;
+  var position = _ref.position,
+      miniatureOpen = _ref.miniatureOpen,
+      setMiniatureOpen = _ref.setMiniatureOpen;
   var style = (_style = {
     width: "24px",
     height: "24px",
@@ -5373,28 +5151,26 @@ function MiniatureToggleButton(_ref) {
     position: "absolute",
     bottom: 0
   }, _defineProperty(_style, position === _constants.POSITION_LEFT ? 'left' : 'right', '0px'), _defineProperty(_style, "background", "rgba(19, 20, 22, 0.901961)"), _defineProperty(_style, "border", 0), _defineProperty(_style, "padding", 0), _defineProperty(_style, "outline", 0), _defineProperty(_style, "color", "#fff"), _style);
-  var action = value.miniatureOpen ? _miniature.closeMiniature : _miniature.openMiniature;
   return _react.default.createElement("button", {
     role: "button",
     type: "button",
     style: style,
     onClick: function onClick(event) {
-      return onChangeValue(action(value));
+      return setMiniatureOpen(!miniatureOpen);
     }
   }, _react.default.createElement(_iconArrow.default, {
-    open: value.miniatureOpen,
+    open: miniatureOpen,
     position: position
   }));
 }
 
 MiniatureToggleButton.propTypes = {
-  value: _propTypes.default.object.isRequired,
-  onChangeValue: _propTypes.default.func.isRequired,
+  // onChangeValue: PropTypes.func.isRequired,
   position: _propTypes.default.oneOf([_constants.POSITION_RIGHT, _constants.POSITION_LEFT]).isRequired
 };
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5446,7 +5222,7 @@ IconArrow.propTypes = {
 };
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5461,15 +5237,15 @@ var _react = _interopRequireDefault(__webpack_require__(0));
 
 var _propTypes = _interopRequireDefault(__webpack_require__(2));
 
-var _RandomUID = _interopRequireDefault(__webpack_require__(13));
+var _RandomUID = _interopRequireDefault(__webpack_require__(14));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var prefixID = 'react-svg-pan-zoom_miniature';
 
 function MiniatureMask(_ref) {
-  var SVGViewBoxX = _ref.SVGViewBoxX,
-      SVGViewBoxY = _ref.SVGViewBoxY,
+  var SVGMinX = _ref.SVGMinX,
+      SVGMinY = _ref.SVGMinY,
       SVGWidth = _ref.SVGWidth,
       SVGHeight = _ref.SVGHeight,
       x1 = _ref.x1,
@@ -5482,8 +5258,8 @@ function MiniatureMask(_ref) {
   return _react.default.createElement("g", null, _react.default.createElement("defs", null, _react.default.createElement("mask", {
     id: maskID
   }, _react.default.createElement("rect", {
-    x: SVGViewBoxX,
-    y: SVGViewBoxY,
+    x: SVGMinX,
+    y: SVGMinY,
     width: SVGWidth,
     height: SVGHeight,
     fill: "#ffffff"
@@ -5493,8 +5269,8 @@ function MiniatureMask(_ref) {
     width: x2 - x1,
     height: y2 - y1
   }))), _react.default.createElement("rect", {
-    x: SVGViewBoxX,
-    y: SVGViewBoxY,
+    x: SVGMinX,
+    y: SVGMinY,
     width: SVGWidth,
     height: SVGHeight,
     style: {
@@ -5509,8 +5285,8 @@ function MiniatureMask(_ref) {
 MiniatureMask.propTypes = {
   SVGWidth: _propTypes.default.number.isRequired,
   SVGHeight: _propTypes.default.number.isRequired,
-  SVGViewBoxX: _propTypes.default.number.isRequired,
-  SVGViewBoxY: _propTypes.default.number.isRequired,
+  SVGMinX: _propTypes.default.number.isRequired,
+  SVGMinY: _propTypes.default.number.isRequired,
   x1: _propTypes.default.number.isRequired,
   y1: _propTypes.default.number.isRequired,
   x2: _propTypes.default.number.isRequired,
@@ -5523,7 +5299,7 @@ var _default = (0, _RandomUID.default)(MiniatureMask);
 exports.default = _default;
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5534,9 +5310,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _react = _interopRequireDefault(__webpack_require__(0));
+var _react = _interopRequireWildcard(__webpack_require__(0));
 
-var _viewer = _interopRequireDefault(__webpack_require__(9));
+var _viewer = _interopRequireDefault(__webpack_require__(10));
 
 var _propTypes = _interopRequireDefault(__webpack_require__(2));
 
@@ -5544,7 +5320,9 @@ var _constants = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; if (obj != null) { var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -5552,141 +5330,44 @@ function _objectWithoutProperties(source, excluded) { if (source == null) return
 
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+var UncontrolledReactSVGPanZoom = (0, _react.forwardRef)(function (props, Viewer) {
+  // const [value, setValue] = useState(props.defaultValue || {});
+  var _useState = (0, _react.useState)(props.defaultTool || _constants.TOOL_NONE),
+      _useState2 = _slicedToArray(_useState, 2),
+      tool = _useState2[0],
+      setTool = _useState2[1];
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+  var width = props.width,
+      height = props.height,
+      onChangeTool = props.onChangeTool,
+      onChangeValue = props.onChangeValue,
+      svgProps = _objectWithoutProperties(props, ["width", "height", "onChangeTool", "onChangeValue"]);
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-var UncontrolledReactSVGPanZoom =
-/*#__PURE__*/
-function (_React$Component) {
-  _inherits(UncontrolledReactSVGPanZoom, _React$Component);
-
-  function UncontrolledReactSVGPanZoom(props) {
-    var _this;
-
-    _classCallCheck(this, UncontrolledReactSVGPanZoom);
-
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(UncontrolledReactSVGPanZoom).call(this, props));
-    _this.state = {
-      value: props.defaultValue || {},
-      tool: props.defaultTool || _constants.TOOL_NONE
-    };
-    _this.Viewer = null;
-    _this.changeTool = _this.changeTool.bind(_assertThisInitialized(_this));
-    _this.changeValue = _this.changeValue.bind(_assertThisInitialized(_this));
-    return _this;
-  }
-
-  _createClass(UncontrolledReactSVGPanZoom, [{
-    key: "changeTool",
-    value: function changeTool(tool) {
-      this.setState({
-        tool: tool
-      });
-    }
-  }, {
-    key: "changeValue",
-    value: function changeValue(value) {
-      this.setState({
-        value: value
-      });
-    }
-  }, {
-    key: "pan",
-    value: function pan(SVGDeltaX, SVGDeltaY) {
-      this.Viewer.pan(SVGDeltaX, SVGDeltaY);
-    }
-  }, {
-    key: "zoom",
-    value: function zoom(SVGPointX, SVGPointY, scaleFactor) {
-      this.Viewer.zoom(SVGPointX, SVGPointY, scaleFactor);
-    }
-  }, {
-    key: "fitSelection",
-    value: function fitSelection(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight) {
-      this.Viewer.fitSelection(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight);
-    }
-  }, {
-    key: "fitToViewer",
-    value: function fitToViewer(SVGAlignX, SVGAlignY) {
-      this.Viewer.fitToViewer(SVGAlignX, SVGAlignY);
-    }
-  }, {
-    key: "zoomOnViewerCenter",
-    value: function zoomOnViewerCenter(scaleFactor) {
-      this.Viewer.zoomOnViewerCenter(scaleFactor);
-    }
-  }, {
-    key: "setPointOnViewerCenter",
-    value: function setPointOnViewerCenter(SVGPointX, SVGPointY, zoomLevel) {
-      this.Viewer.setPointOnViewerCenter(SVGPointX, SVGPointY, zoomLevel);
-    }
-  }, {
-    key: "reset",
-    value: function reset() {
-      this.Viewer.reset();
-    }
-  }, {
-    key: "openMiniature",
-    value: function openMiniature() {
-      this.Viewer.openMiniature();
-    }
-  }, {
-    key: "closeMiniature",
-    value: function closeMiniature() {
-      this.Viewer.closeMiniature();
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _this2 = this;
-
-      var _this$props = this.props,
-          width = _this$props.width,
-          height = _this$props.height,
-          onChangeTool = _this$props.onChangeTool,
-          onChangeValue = _this$props.onChangeValue,
-          props = _objectWithoutProperties(_this$props, ["width", "height", "onChangeTool", "onChangeValue"]);
-
-      var _this$state = this.state,
-          tool = _this$state.tool,
-          value = _this$state.value;
-      return _react.default.createElement(_viewer.default, _extends({
-        width: width,
-        height: height,
-        tool: tool,
-        onChangeTool: this.changeTool,
-        value: value,
-        onChangeValue: this.changeValue,
-        ref: function ref(Viewer) {
-          return _this2.Viewer = Viewer;
-        }
-      }, props));
-    }
-  }]);
-
-  return UncontrolledReactSVGPanZoom;
-}(_react.default.Component);
-
-exports.default = UncontrolledReactSVGPanZoom;
+  return _react.default.createElement(_viewer.default, _extends({
+    width: width,
+    height: height,
+    tool: tool,
+    onChangeTool: setTool // value={value} onChangeValue={setValue}
+    ,
+    ref: Viewer
+  }, svgProps));
+});
 UncontrolledReactSVGPanZoom.propTypes = {
   width: _propTypes.default.number.isRequired,
   height: _propTypes.default.number.isRequired,
-  defaultValue: _propTypes.default.object,
+  // defaultValue: PropTypes.object,
   defaultTool: _propTypes.default.string
 };
+var _default = UncontrolledReactSVGPanZoom;
+exports.default = _default;
 
 /***/ })
 /******/ ]);

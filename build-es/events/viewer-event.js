@@ -9,12 +9,12 @@ import { decompose } from '../features/common';
 var ViewerEvent =
 /*#__PURE__*/
 function () {
-  function ViewerEvent(originalEvent, value, SVGViewer) {
+  function ViewerEvent(originalEvent, matrix, boundingRect) {
     _classCallCheck(this, ViewerEvent);
 
     this.originalEvent = originalEvent;
-    this.value = value;
-    this.SVGViewer = SVGViewer;
+    this.matrix = matrix;
+    this.boundingRect = boundingRect;
   }
 
   _createClass(ViewerEvent, [{
@@ -30,19 +30,19 @@ function () {
   }, {
     key: "scaleFactor",
     get: function get() {
-      this._cacheDecomposedValue = this._cacheDecomposedValue || decompose(this.value);
+      this._cacheDecomposedValue = this._cacheDecomposedValue || decompose(this.matrix);
       return this._cacheDecomposedValue.scaleFactor;
     }
   }, {
     key: "translationX",
     get: function get() {
-      this._cacheDecomposedValue = this._cacheDecomposedValue || decompose(this.value);
+      this._cacheDecomposedValue = this._cacheDecomposedValue || decompose(this.matrix);
       return this._cacheDecomposedValue.translationX;
     }
   }, {
     key: "translationY",
     get: function get() {
-      this._cacheDecomposedValue = this._cacheDecomposedValue || decompose(this.value);
+      this._cacheDecomposedValue = this._cacheDecomposedValue || decompose(this.matrix);
       return this._cacheDecomposedValue.translationY;
     }
   }]);

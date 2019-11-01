@@ -22,9 +22,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 function MiniatureToggleButton(_ref) {
   var _style;
 
-  var value = _ref.value,
-      onChangeValue = _ref.onChangeValue,
-      position = _ref.position;
+  var position = _ref.position,
+      miniatureOpen = _ref.miniatureOpen,
+      setMiniatureOpen = _ref.setMiniatureOpen;
   var style = (_style = {
     width: "24px",
     height: "24px",
@@ -32,22 +32,20 @@ function MiniatureToggleButton(_ref) {
     position: "absolute",
     bottom: 0
   }, _defineProperty(_style, position === _constants.POSITION_LEFT ? 'left' : 'right', '0px'), _defineProperty(_style, "background", "rgba(19, 20, 22, 0.901961)"), _defineProperty(_style, "border", 0), _defineProperty(_style, "padding", 0), _defineProperty(_style, "outline", 0), _defineProperty(_style, "color", "#fff"), _style);
-  var action = value.miniatureOpen ? _miniature.closeMiniature : _miniature.openMiniature;
   return _react.default.createElement("button", {
     role: "button",
     type: "button",
     style: style,
     onClick: function onClick(event) {
-      return onChangeValue(action(value));
+      return setMiniatureOpen(!miniatureOpen);
     }
   }, _react.default.createElement(_iconArrow.default, {
-    open: value.miniatureOpen,
+    open: miniatureOpen,
     position: position
   }));
 }
 
 MiniatureToggleButton.propTypes = {
-  value: _propTypes.default.object.isRequired,
-  onChangeValue: _propTypes.default.func.isRequired,
+  // onChangeValue: PropTypes.func.isRequired,
   position: _propTypes.default.oneOf([_constants.POSITION_RIGHT, _constants.POSITION_LEFT]).isRequired
 };

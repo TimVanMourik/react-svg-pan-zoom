@@ -18,4 +18,8 @@ export var ALIGN_LEFT = 'left';
 export var ALIGN_RIGHT = 'right';
 export var ALIGN_TOP = 'top';
 export var ALIGN_BOTTOM = 'bottom';
+export var NULL_POSITION = {
+  x: null,
+  y: null
+};
 export var INITIAL_VALUE = {};

@@ -32,7 +32,8 @@ function tipDeprecateToolbarProps() {
 }
 
 function printMigrationTipsRelatedToProps(props) {
-  if ((0, _is.isNullOrUndefined)(props.tool) || (0, _is.isNullOrUndefined)(props.value)) tipControlledComponent();
+  if ((0, _is.isNullOrUndefined)(props.tool)) tipControlledComponent(); // #TODO mention somethign about 'value' in vrsion 4
+
   if (!(0, _is.isNullOrUndefined)(props.miniaturePosition) || !(0, _is.isNullOrUndefined)(props.miniatureBackground) || !(0, _is.isNullOrUndefined)(props.miniatureWidth) || !(0, _is.isNullOrUndefined)(props.miniatureHeight)) tipDeprecatedMiniatureProps();
   if (!(0, _is.isNullOrUndefined)(props.toolbarPosition)) tipDeprecateToolbarProps();
 }

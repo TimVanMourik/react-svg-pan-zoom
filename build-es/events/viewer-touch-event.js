@@ -39,26 +39,25 @@ function (_ViewerEvent) {
   _createClass(ViewerTouchEvent, [{
     key: "points",
     get: function get() {
-      if (!this._cachePoints) this._cachePoints = ViewerTouchEvent.touchesToPoints(this.originalEvent.touches, this.SVGViewer, this.value);
+      if (!this._cachePoints) this._cachePoints = ViewerTouchEvent.touchesToPoints(this.originalEvent.touches, this.boundingRect, this.matrix);
       return this._cachePoints;
     }
   }, {
     key: "changedPoints",
     get: function get() {
-      if (!this._cacheChangedPoints) this._cacheChangedPoints = ViewerTouchEvent.touchesToPoints(this.originalEvent.changedTouches, this.SVGViewer, this.value);
+      if (!this._cacheChangedPoints) this._cacheChangedPoints = ViewerTouchEvent.touchesToPoints(this.originalEvent.changedTouches, this.boundingRect, this.matrix);
       return this._cacheChangedPoints;
     }
   }], [{
     key: "touchesToPoints",
-    value: function touchesToPoints(touches, SVGViewer, value) {
+    value: function touchesToPoints(touches, boundingRect, matrix) {
       var points = [];
 
       for (var i = 0; i < touches.length; i++) {
         var touch = touches[i];
-        var rect = SVGViewer.getBoundingClientRect();
-        var x = touch.clientX - Math.round(rect.left);
-        var y = touch.clientY - Math.round(rect.top);
-        var point = getSVGPoint(value, x, y);
+        var x = touch.clientX - Math.round(boundingRect.left);
+        var y = touch.clientY - Math.round(boundingRect.top);
+        var point = getSVGPoint(x, y, matrix);
         points.push(_objectSpread({}, point, {
           identifier: touch.identifier
         }));

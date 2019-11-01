@@ -16,8 +16,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var prefixID = 'react-svg-pan-zoom_miniature';
 
 function MiniatureMask(_ref) {
-  var SVGViewBoxX = _ref.SVGViewBoxX,
-      SVGViewBoxY = _ref.SVGViewBoxY,
+  var SVGMinX = _ref.SVGMinX,
+      SVGMinY = _ref.SVGMinY,
       SVGWidth = _ref.SVGWidth,
       SVGHeight = _ref.SVGHeight,
       x1 = _ref.x1,
@@ -30,8 +30,8 @@ function MiniatureMask(_ref) {
   return _react.default.createElement("g", null, _react.default.createElement("defs", null, _react.default.createElement("mask", {
     id: maskID
   }, _react.default.createElement("rect", {
-    x: SVGViewBoxX,
-    y: SVGViewBoxY,
+    x: SVGMinX,
+    y: SVGMinY,
     width: SVGWidth,
     height: SVGHeight,
     fill: "#ffffff"
@@ -41,8 +41,8 @@ function MiniatureMask(_ref) {
     width: x2 - x1,
     height: y2 - y1
   }))), _react.default.createElement("rect", {
-    x: SVGViewBoxX,
-    y: SVGViewBoxY,
+    x: SVGMinX,
+    y: SVGMinY,
     width: SVGWidth,
     height: SVGHeight,
     style: {
@@ -57,8 +57,8 @@ function MiniatureMask(_ref) {
 MiniatureMask.propTypes = {
   SVGWidth: _propTypes.default.number.isRequired,
   SVGHeight: _propTypes.default.number.isRequired,
-  SVGViewBoxX: _propTypes.default.number.isRequired,
-  SVGViewBoxY: _propTypes.default.number.isRequired,
+  SVGMinX: _propTypes.default.number.isRequired,
+  SVGMinY: _propTypes.default.number.isRequired,
   x1: _propTypes.default.number.isRequired,
   y1: _propTypes.default.number.isRequired,
   x2: _propTypes.default.number.isRequired,

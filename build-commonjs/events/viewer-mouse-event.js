@@ -45,12 +45,11 @@ function (_ViewerEvent) {
     get: function get() {
       if (!this._cachePoint) {
         var event = this.originalEvent,
-            value = this.value,
-            SVGViewer = this.SVGViewer;
-        var rect = SVGViewer.getBoundingClientRect();
-        var x = event.clientX - Math.round(rect.left);
-        var y = event.clientY - Math.round(rect.top);
-        this._cachePoint = (0, _common.getSVGPoint)(value, x, y);
+            matrix = this.matrix,
+            boundingRect = this.boundingRect;
+        var x = event.clientX - Math.round(boundingRect.left);
+        var y = event.clientY - Math.round(boundingRect.top);
+        this._cachePoint = (0, _common.getSVGPoint)(x, y, matrix);
       }
 
       return this._cachePoint;

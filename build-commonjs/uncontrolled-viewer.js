@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _react = _interopRequireDefault(require("react"));
+var _react = _interopRequireWildcard(require("react"));
 
 var _viewer = _interopRequireDefault(require("./viewer"));
 
@@ -15,7 +15,9 @@ var _constants = require("./constants");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; if (obj != null) { var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -23,138 +25,41 @@ function _objectWithoutProperties(source, excluded) { if (source == null) return
 
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+var UncontrolledReactSVGPanZoom = (0, _react.forwardRef)(function (props, Viewer) {
+  // const [value, setValue] = useState(props.defaultValue || {});
+  var _useState = (0, _react.useState)(props.defaultTool || _constants.TOOL_NONE),
+      _useState2 = _slicedToArray(_useState, 2),
+      tool = _useState2[0],
+      setTool = _useState2[1];
 
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+  var width = props.width,
+      height = props.height,
+      onChangeTool = props.onChangeTool,
+      onChangeValue = props.onChangeValue,
+      svgProps = _objectWithoutProperties(props, ["width", "height", "onChangeTool", "onChangeValue"]);
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-var UncontrolledReactSVGPanZoom =
-/*#__PURE__*/
-function (_React$Component) {
-  _inherits(UncontrolledReactSVGPanZoom, _React$Component);
-
-  function UncontrolledReactSVGPanZoom(props) {
-    var _this;
-
-    _classCallCheck(this, UncontrolledReactSVGPanZoom);
-
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(UncontrolledReactSVGPanZoom).call(this, props));
-    _this.state = {
-      value: props.defaultValue || {},
-      tool: props.defaultTool || _constants.TOOL_NONE
-    };
-    _this.Viewer = null;
-    _this.changeTool = _this.changeTool.bind(_assertThisInitialized(_this));
-    _this.changeValue = _this.changeValue.bind(_assertThisInitialized(_this));
-    return _this;
-  }
-
-  _createClass(UncontrolledReactSVGPanZoom, [{
-    key: "changeTool",
-    value: function changeTool(tool) {
-      this.setState({
-        tool: tool
-      });
-    }
-  }, {
-    key: "changeValue",
-    value: function changeValue(value) {
-      this.setState({
-        value: value
-      });
-    }
-  }, {
-    key: "pan",
-    value: function pan(SVGDeltaX, SVGDeltaY) {
-      this.Viewer.pan(SVGDeltaX, SVGDeltaY);
-    }
-  }, {
-    key: "zoom",
-    value: function zoom(SVGPointX, SVGPointY, scaleFactor) {
-      this.Viewer.zoom(SVGPointX, SVGPointY, scaleFactor);
-    }
-  }, {
-    key: "fitSelection",
-    value: function fitSelection(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight) {
-      this.Viewer.fitSelection(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight);
-    }
-  }, {
-    key: "fitToViewer",
-    value: function fitToViewer(SVGAlignX, SVGAlignY) {
-      this.Viewer.fitToViewer(SVGAlignX, SVGAlignY);
-    }
-  }, {
-    key: "zoomOnViewerCenter",
-    value: function zoomOnViewerCenter(scaleFactor) {
-      this.Viewer.zoomOnViewerCenter(scaleFactor);
-    }
-  }, {
-    key: "setPointOnViewerCenter",
-    value: function setPointOnViewerCenter(SVGPointX, SVGPointY, zoomLevel) {
-      this.Viewer.setPointOnViewerCenter(SVGPointX, SVGPointY, zoomLevel);
-    }
-  }, {
-    key: "reset",
-    value: function reset() {
-      this.Viewer.reset();
-    }
-  }, {
-    key: "openMiniature",
-    value: function openMiniature() {
-      this.Viewer.openMiniature();
-    }
-  }, {
-    key: "closeMiniature",
-    value: function closeMiniature() {
-      this.Viewer.closeMiniature();
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _this2 = this;
-
-      var _this$props = this.props,
-          width = _this$props.width,
-          height = _this$props.height,
-          onChangeTool = _this$props.onChangeTool,
-          onChangeValue = _this$props.onChangeValue,
-          props = _objectWithoutProperties(_this$props, ["width", "height", "onChangeTool", "onChangeValue"]);
-
-      var _this$state = this.state,
-          tool = _this$state.tool,
-          value = _this$state.value;
-      return _react.default.createElement(_viewer.default, _extends({
-        width: width,
-        height: height,
-        tool: tool,
-        onChangeTool: this.changeTool,
-        value: value,
-        onChangeValue: this.changeValue,
-        ref: function ref(Viewer) {
-          return _this2.Viewer = Viewer;
-        }
-      }, props));
-    }
-  }]);
-
-  return UncontrolledReactSVGPanZoom;
-}(_react.default.Component);
-
-exports.default = UncontrolledReactSVGPanZoom;
+  return _react.default.createElement(_viewer.default, _extends({
+    width: width,
+    height: height,
+    tool: tool,
+    onChangeTool: setTool // value={value} onChangeValue={setValue}
+    ,
+    ref: Viewer
+  }, svgProps));
+});
 UncontrolledReactSVGPanZoom.propTypes = {
   width: _propTypes.default.number.isRequired,
   height: _propTypes.default.number.isRequired,
-  defaultValue: _propTypes.default.object,
+  // defaultValue: PropTypes.object,
   defaultTool: _propTypes.default.string
 };
+var _default = UncontrolledReactSVGPanZoom;
+exports.default = _default;

@@ -4,8 +4,8 @@ import RandomUID from "../utils/RandomUID";
 var prefixID = 'react-svg-pan-zoom_miniature';
 
 function MiniatureMask(_ref) {
-  var SVGViewBoxX = _ref.SVGViewBoxX,
-      SVGViewBoxY = _ref.SVGViewBoxY,
+  var SVGMinX = _ref.SVGMinX,
+      SVGMinY = _ref.SVGMinY,
       SVGWidth = _ref.SVGWidth,
       SVGHeight = _ref.SVGHeight,
       x1 = _ref.x1,
@@ -18,8 +18,8 @@ function MiniatureMask(_ref) {
   return React.createElement("g", null, React.createElement("defs", null, React.createElement("mask", {
     id: maskID
   }, React.createElement("rect", {
-    x: SVGViewBoxX,
-    y: SVGViewBoxY,
+    x: SVGMinX,
+    y: SVGMinY,
     width: SVGWidth,
     height: SVGHeight,
     fill: "#ffffff"
@@ -29,8 +29,8 @@ function MiniatureMask(_ref) {
     width: x2 - x1,
     height: y2 - y1
   }))), React.createElement("rect", {
-    x: SVGViewBoxX,
-    y: SVGViewBoxY,
+    x: SVGMinX,
+    y: SVGMinY,
     width: SVGWidth,
     height: SVGHeight,
     style: {
@@ -45,8 +45,8 @@ function MiniatureMask(_ref) {
 MiniatureMask.propTypes = {
   SVGWidth: PropTypes.number.isRequired,
   SVGHeight: PropTypes.number.isRequired,
-  SVGViewBoxX: PropTypes.number.isRequired,
-  SVGViewBoxY: PropTypes.number.isRequired,
+  SVGMinX: PropTypes.number.isRequired,
+  SVGMinY: PropTypes.number.isRequired,
   x1: PropTypes.number.isRequired,
   y1: PropTypes.number.isRequired,
   x2: PropTypes.number.isRequired,

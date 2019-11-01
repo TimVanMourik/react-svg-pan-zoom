@@ -6,16 +6,14 @@ Object.defineProperty(exports, "__esModule", {
 exports.openMiniature = openMiniature;
 exports.closeMiniature = closeMiniature;
 
-var _common = require("./common");
-
-function openMiniature(value) {
-  return (0, _common.set)(value, {
+function openMiniature() {
+  return {
     miniatureOpen: true
-  });
+  };
 }
 
-function closeMiniature(value) {
-  return (0, _common.set)(value, {
+function closeMiniature() {
+  return {
     miniatureOpen: false
-  });
+  };
 }

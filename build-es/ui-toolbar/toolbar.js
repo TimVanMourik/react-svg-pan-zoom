@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT, POSITION_TOP, POSITION_RIGHT, POSITION_BOTTOM, POSITION_LEFT, ALIGN_CENTER, ALIGN_LEFT, ALIGN_RIGHT, ALIGN_TOP, ALIGN_BOTTOM } from '../constants';
-import { fitToViewer } from '../features/zoom';
 import IconCursor from './icon-cursor';
 import IconPan from './icon-pan';
 import IconZoomIn from './icon-zoom-in';
@@ -10,10 +9,9 @@ import IconFit from './icon-fit';
 import ToolbarButton from './toolbar-button';
 export default function Toolbar(_ref) {
   var tool = _ref.tool,
-      value = _ref.value,
-      onChangeValue = _ref.onChangeValue,
       onChangeTool = _ref.onChangeTool,
       position = _ref.position,
+      fitToViewer = _ref.fitToViewer,
       SVGAlignX = _ref.SVGAlignX,
       SVGAlignY = _ref.SVGAlignY;
 
@@ -24,7 +22,7 @@ export default function Toolbar(_ref) {
   };
 
   var handleFit = function handleFit(event) {
-    onChangeValue(fitToViewer(value, SVGAlignX, SVGAlignY));
+    fitToViewer(SVGAlignX, SVGAlignY);
     event.stopPropagation();
     event.preventDefault();
   };
@@ -93,15 +91,10 @@ export default function Toolbar(_ref) {
 Toolbar.propTypes = {
   tool: PropTypes.string.isRequired,
   onChangeTool: PropTypes.func.isRequired,
-  value: PropTypes.object.isRequired,
-  onChangeValue: PropTypes.func.isRequired,
+  // onChangeValue: PropTypes.func.isRequired,
   //customizations
-  position: PropTypes.oneOf([POSITION_TOP, POSITION_RIGHT, POSITION_BOTTOM, POSITION_LEFT]),
-  SVGAlignX: PropTypes.oneOf([ALIGN_CENTER, ALIGN_LEFT, ALIGN_RIGHT]),
-  SVGAlignY: PropTypes.oneOf([ALIGN_CENTER, ALIGN_TOP, ALIGN_BOTTOM])
+  position: PropTypes.oneOf([POSITION_TOP, POSITION_RIGHT, POSITION_BOTTOM, POSITION_LEFT])
 };
 Toolbar.defaultProps = {
-  position: POSITION_RIGHT,
-  SVGAlignX: ALIGN_LEFT,
-  SVGAlignY: ALIGN_TOP
+  position: POSITION_RIGHT
 };

@@ -29,100 +29,95 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function lessThanScaleFactorMin(value, scaleFactor) {
-  return value.scaleFactorMin && value.d * scaleFactor <= value.scaleFactorMin;
+function lessThanScaleFactorMin(matrix, scaleFactor, scaleFactorMin) {
+  return scaleFactorMin && matrix.d * scaleFactor <= scaleFactorMin;
 }
 
-function moreThanScaleFactorMax(value, scaleFactor) {
-  return value.scaleFactorMax && value.d * scaleFactor >= value.scaleFactorMax;
+function moreThanScaleFactorMax(matrix, scaleFactor, scaleFactorMax) {
+  return scaleFactorMax && matrix.d * scaleFactor >= scaleFactorMax;
 }
 
-function isZoomLevelGoingOutOfBounds(value, scaleFactor) {
-  return lessThanScaleFactorMin(value, scaleFactor) && scaleFactor < 1 || moreThanScaleFactorMax(value, scaleFactor) && scaleFactor > 1;
+function isZoomLevelGoingOutOfBounds(matrix, scaleFactor, scaleFactorMin, scaleFactorMax) {
+  return lessThanScaleFactorMin(matrix, scaleFactor, scaleFactorMin) && scaleFactor < 1 || moreThanScaleFactorMax(matrix, scaleFactor, scaleFactorMax) && scaleFactor > 1;
 }
 
-function limitZoomLevel(value, matrix) {
+function limitZoomLevel(matrix, scaleFactorMin, scaleFactorMax) {
   var scaleLevel = matrix.a;
 
-  if (value.scaleFactorMin != null) {
+  if (scaleFactorMin != null) {
     // limit minimum zoom
-    scaleLevel = Math.max(scaleLevel, value.scaleFactorMin);
+    scaleLevel = Math.max(scaleLevel, scaleFactorMin);
   }
 
-  if (value.scaleFactorMax != null) {
+  if (scaleFactorMax != null) {
     // limit maximum zoom
-    scaleLevel = Math.min(scaleLevel, value.scaleFactorMax);
+    scaleLevel = Math.min(scaleLevel, scaleFactorMax);
   }
 
-  return (0, _common.set)(matrix, {
+  return _objectSpread({}, matrix, {
     a: scaleLevel,
     d: scaleLevel
   });
 }
 
-function zoom(value, SVGPointX, SVGPointY, scaleFactor) {
-  if (isZoomLevelGoingOutOfBounds(value, scaleFactor)) {
-    // Do not change translation and scale of value
-    return value;
+function zoom(matrix, SVGPoint, scaleFactor, scaleFactorMin, scaleFactorMax) {
+  if (isZoomLevelGoingOutOfBounds(matrix, scaleFactor, scaleFactorMin, scaleFactorMax)) {
+    return {
+      matrix: matrix
+    };
   }
 
-  var matrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.fromObject)(value), (0, _transformationMatrix.translate)(SVGPointX, SVGPointY), (0, _transformationMatrix.scale)(scaleFactor, scaleFactor), (0, _transformationMatrix.translate)(-SVGPointX, -SVGPointY));
-  return (0, _common.set)(value, _objectSpread({
-    mode: _constants.MODE_IDLE
-  }, limitZoomLevel(value, matrix), {
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null
-  }), _constants.ACTION_ZOOM);
+  var newMatrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.fromObject)(matrix), (0, _transformationMatrix.translate)(SVGPoint.x, SVGPoint.y), (0, _transformationMatrix.scale)(scaleFactor, scaleFactor), (0, _transformationMatrix.translate)(-SVGPoint.x, -SVGPoint.y));
+  return {
+    mode: _constants.MODE_IDLE,
+    matrix: limitZoomLevel(newMatrix, scaleFactorMin, scaleFactorMax),
+    start: _constants.NULL_POSITION,
+    end: _constants.NULL_POSITION,
+    last_action: _constants.ACTION_ZOOM
+  };
 }
 
-function fitSelection(value, selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight) {
-  var viewerWidth = value.viewerWidth,
-      viewerHeight = value.viewerHeight;
+function fitSelection(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight, viewerWidth, viewerHeight) {
   var scaleX = viewerWidth / selectionWidth;
   var scaleY = viewerHeight / selectionHeight;
   var scaleLevel = Math.min(scaleX, scaleY);
-  var matrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.scale)(scaleLevel, scaleLevel), //2
+  var newMatrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.scale)(scaleLevel, scaleLevel), //2
   (0, _transformationMatrix.translate)(-selectionSVGPointX, -selectionSVGPointY) //1
   );
 
-  if (isZoomLevelGoingOutOfBounds(value, scaleLevel / value.d)) {
+  if (isZoomLevelGoingOutOfBounds(scaleLevel / newMatrix.d)) {
     // Do not allow scale and translation
-    return (0, _common.set)(value, {
+    return {
       mode: _constants.MODE_IDLE,
-      startX: null,
-      startY: null,
-      endX: null,
-      endY: null
-    });
+      start: _constants.NULL_POSITION,
+      end: _constants.NULL_POSITION
+    };
   }
 
-  return (0, _common.set)(value, _objectSpread({
-    mode: _constants.MODE_IDLE
-  }, limitZoomLevel(value, matrix), {
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null
-  }), _constants.ACTION_ZOOM);
+  return {
+    mode: _constants.MODE_IDLE,
+    matrix: limitZoomLevel(newMatrix),
+    start: _constants.NULL_POSITION,
+    end: _constants.NULL_POSITION,
+    last_action: _constants.ACTION_ZOOM
+  };
 }
 
-function fitToViewer(value) {
-  var SVGAlignX = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _constants.ALIGN_LEFT;
-  var SVGAlignY = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _constants.ALIGN_TOP;
-  var viewerWidth = value.viewerWidth,
-      viewerHeight = value.viewerHeight,
-      SVGViewBoxX = value.SVGViewBoxX,
-      SVGViewBoxY = value.SVGViewBoxY,
-      SVGWidth = value.SVGWidth,
-      SVGHeight = value.SVGHeight;
+function fitToViewer(viewer, SVGAttributes) {
+  var SVGAlignX = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _constants.ALIGN_LEFT;
+  var SVGAlignY = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _constants.ALIGN_TOP;
+  var SVGMinX = SVGAttributes.SVGMinX,
+      SVGMinY = SVGAttributes.SVGMinY,
+      SVGWidth = SVGAttributes.SVGWidth,
+      SVGHeight = SVGAttributes.SVGHeight;
+  var viewerWidth = viewer.viewerWidth,
+      viewerHeight = viewer.viewerHeight;
   var scaleX = viewerWidth / SVGWidth;
   var scaleY = viewerHeight / SVGHeight;
   var scaleLevel = Math.min(scaleX, scaleY);
   var scaleMatrix = (0, _transformationMatrix.scale)(scaleLevel, scaleLevel);
-  var translateX = -SVGViewBoxX * scaleX;
-  var translateY = -SVGViewBoxY * scaleY; // after fitting, SVG and the viewer will match in width (1) or in height (2)
+  var translateX = -SVGMinX * scaleX;
+  var translateY = -SVGMinY * scaleY; // after fitting, SVG and the viewer will match in width (1) or in height (2)
 
   if (scaleX < scaleY) {
     //(1) match in width, meaning scaled SVGHeight <= viewerHeight
@@ -130,15 +125,15 @@ function fitToViewer(value) {
 
     switch (SVGAlignY) {
       case _constants.ALIGN_TOP:
-        translateY = -SVGViewBoxY * scaleLevel;
+        translateY = -SVGMinY * scaleLevel;
         break;
 
       case _constants.ALIGN_CENTER:
-        translateY = Math.round(remainderY / 2) - SVGViewBoxY * scaleLevel;
+        translateY = Math.round(remainderY / 2) - SVGMinY * scaleLevel;
         break;
 
       case _constants.ALIGN_BOTTOM:
-        translateY = remainderY - SVGViewBoxY * scaleLevel;
+        translateY = remainderY - SVGMinY * scaleLevel;
         break;
     }
   } else {
@@ -147,15 +142,15 @@ function fitToViewer(value) {
 
     switch (SVGAlignX) {
       case _constants.ALIGN_LEFT:
-        translateX = -SVGViewBoxX * scaleLevel;
+        translateX = -SVGMinX * scaleLevel;
         break;
 
       case _constants.ALIGN_CENTER:
-        translateX = Math.round(remainderX / 2) - SVGViewBoxX * scaleLevel;
+        translateX = Math.round(remainderX / 2) - SVGMinX * scaleLevel;
         break;
 
       case _constants.ALIGN_RIGHT:
-        translateX = remainderX - SVGViewBoxX * scaleLevel;
+        translateX = remainderX - SVGMinX * scaleLevel;
         break;
     }
   }
@@ -165,65 +160,59 @@ function fitToViewer(value) {
   scaleMatrix //1
   );
 
-  if (isZoomLevelGoingOutOfBounds(value, scaleLevel / value.d)) {
+  if (isZoomLevelGoingOutOfBounds(scaleLevel / matrix.d)) {
     // Do not allow scale and translation
-    return (0, _common.set)(value, {
+    return {
       mode: _constants.MODE_IDLE,
-      startX: null,
-      startY: null,
-      endX: null,
-      endY: null
-    });
+      start: _constants.NULL_POSITION,
+      end: _constants.NULL_POSITION
+    };
   }
 
-  return (0, _common.set)(value, _objectSpread({
-    mode: _constants.MODE_IDLE
-  }, limitZoomLevel(value, matrix), {
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null
-  }), _constants.ACTION_ZOOM);
+  return {
+    mode: _constants.MODE_IDLE,
+    matrix: limitZoomLevel(matrix),
+    start: _constants.NULL_POSITION,
+    end: _constants.NULL_POSITION,
+    last_action: _constants.ACTION_ZOOM
+  };
 }
 
-function zoomOnViewerCenter(value, scaleFactor) {
-  var viewerWidth = value.viewerWidth,
-      viewerHeight = value.viewerHeight;
-  var SVGPoint = (0, _common.getSVGPoint)(value, viewerWidth / 2, viewerHeight / 2);
-  return zoom(value, SVGPoint.x, SVGPoint.y, scaleFactor);
+function zoomOnViewerCenter(matrix, viewer, scaleFactor, scaleFactorMin, scaleFactorMax) {
+  var viewerWidth = viewer.viewerWidth,
+      viewerHeight = viewer.viewerHeight;
+  var SVGPoint = (0, _common.getSVGPoint)(viewerWidth / 2, viewerHeight / 2, matrix);
+  return zoom(matrix, SVGPoint, scaleFactor, scaleFactorMin, scaleFactorMax);
 }
 
-function startZooming(value, viewerX, viewerY) {
-  return (0, _common.set)(value, {
+function startZooming(viewer) {
+  return {
     mode: _constants.MODE_ZOOMING,
-    startX: viewerX,
-    startY: viewerY,
-    endX: viewerX,
-    endY: viewerY
-  });
+    start: viewer,
+    end: viewer
+  };
 }
 
-function updateZooming(value, viewerX, viewerY) {
-  if (value.mode !== _constants.MODE_ZOOMING) throw new Error('update selection not allowed in this mode ' + value.mode);
-  return (0, _common.set)(value, {
-    endX: viewerX,
-    endY: viewerY
-  });
+function updateZooming(mode, cursor) {
+  if (mode !== _constants.MODE_ZOOMING) throw new Error('update selection not allowed in this mode ' + mode);
+  return {
+    end: cursor
+  };
 }
 
-function stopZooming(value, viewerX, viewerY, scaleFactor, props) {
-  var startX = value.startX,
-      startY = value.startY,
-      endX = value.endX,
-      endY = value.endY;
-  var start = (0, _common.getSVGPoint)(value, startX, startY);
-  var end = (0, _common.getSVGPoint)(value, endX, endY);
+function stopZooming(cursor, start, end, matrix, scaleFactor, props, viewer) {
+  var startPos = (0, _common.getSVGPoint)(start.x, start.y, matrix);
+  var endPos = (0, _common.getSVGPoint)(end.x, end.y, matrix);
 
-  if (Math.abs(startX - endX) > 7 && Math.abs(startY - endY) > 7) {
-    var box = (0, _calculateBox.default)(start, end);
-    return fitSelection(value, box.x, box.y, box.width, box.height);
+  if (Math.abs(startPos.x - endPos.x) > 7 && Math.abs(startPos.y - endPos.y) > 7) {
+    // either fit around the box...
+    var box = (0, _calculateBox.default)(startPos, endPos);
+    return fitSelection(box.x, box.y, box.width, box.height, viewer.viewerWidth, viewer.viewerHeight);
   } else {
-    var SVGPoint = (0, _common.getSVGPoint)(value, viewerX, viewerY);
-    return zoom(value, SVGPoint.x, SVGPoint.y, scaleFactor, props);
+    // ...or zoom in around the cursor
+    var SVGPoint = (0, _common.getSVGPoint)(cursor.x, cursor.y, matrix);
+    var scaleFactorMin = props.scaleFactorMin,
+        scaleFactorMax = props.scaleFactorMax;
+    return zoom(matrix, SVGPoint, scaleFactor, scaleFactorMin, scaleFactorMax);
   }
 }

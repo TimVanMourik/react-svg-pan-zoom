@@ -24,59 +24,54 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-function hasPinchPointDistance(value) {
-  return typeof value.pinchPointDistance === 'number';
+function hasPinchPointDistance(pinchPointDistance) {
+  return typeof pinchPointDistance === 'number';
 }
 
-function onMultiTouch(event, ViewerDOM, tool, value, props) {
-  var _ViewerDOM$getBoundin = ViewerDOM.getBoundingClientRect(),
-      left = _ViewerDOM$getBoundin.left,
-      top = _ViewerDOM$getBoundin.top;
-
+function onMultiTouch(event, boundingRect, matrix, tool, props, mode, prePinchMode) {
+  var left = boundingRect.left,
+      top = boundingRect.top;
   var x1 = event.touches[0].clientX - Math.round(left);
   var y1 = event.touches[0].clientY - Math.round(top);
   var x2 = event.touches[1].clientX - Math.round(left);
   var y2 = event.touches[1].clientY - Math.round(top);
-  var pinchPointDistance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-  var previousPointDistance = hasPinchPointDistance(value) ? value.pinchPointDistance : pinchPointDistance;
-  var svgPoint = (0, _common.getSVGPoint)(value, (x1 + x2) / 2, (y1 + y2) / 2);
+  var thisPinchPointDistance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  var previousPointDistance = hasPinchPointDistance(pinchPointDistance) ? pinchPointDistance : thisPinchPointDistance;
+  var svgPoint = (0, _common.getSVGPoint)((x1 + x2) / 2, (y1 + y2) / 2, matrix);
   var distanceFactor = pinchPointDistance / previousPointDistance;
 
-  if ((0, _zoom.isZoomLevelGoingOutOfBounds)(value, distanceFactor)) {
-    // Do not change translation and scale of value
-    return value;
+  if ((0, _zoom.isZoomLevelGoingOutOfBounds)(distanceFactor)) {
+    return {};
   }
 
   if (event.cancelable) {
     event.preventDefault();
   }
 
-  var matrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.fromObject)(value), (0, _transformationMatrix.translate)(svgPoint.x, svgPoint.y), (0, _transformationMatrix.scale)(distanceFactor, distanceFactor), (0, _transformationMatrix.translate)(-svgPoint.x, -svgPoint.y));
-  return (0, _common.set)(value, (0, _common.set)(_objectSpread({
+  var newMatrix = (0, _transformationMatrix.transform)((0, _transformationMatrix.fromObject)(matrix), (0, _transformationMatrix.translate)(svgPoint.x, svgPoint.y), (0, _transformationMatrix.scale)(distanceFactor, distanceFactor), (0, _transformationMatrix.translate)(-svgPoint.x, -svgPoint.y));
+  return _objectSpread({
     mode: _constants.MODE_ZOOMING
-  }, (0, _zoom.limitZoomLevel)(value, matrix), {
+  }, (0, _zoom.limitZoomLevel)(newMatrix), {
     startX: null,
     startY: null,
     endX: null,
     endY: null,
-    prePinchMode: value.prePinchMode ? value.prePinchMode : value.mode,
+    prePinchMode: prePinchMode ? prePinchMode : mode,
     pinchPointDistance: pinchPointDistance
-  })));
+  });
 }
 
 function isMultiTouch(event, props) {
   return props.detectPinchGesture && event.touches.length > 1;
 }
 
-function shouldResetPinchPointDistance(event, value, props) {
-  return props.detectPinchGesture && hasPinchPointDistance(value) && event.touches.length < 2;
+function shouldResetPinchPointDistance(event, pinchPointDistance, props) {
+  return props.detectPinchGesture && hasPinchPointDistance(pinchPointDistance) && event.touches.length < 2;
 }
 
-function getTouchPosition(touch, ViewerDOM) {
-  var _ViewerDOM$getBoundin2 = ViewerDOM.getBoundingClientRect(),
-      left = _ViewerDOM$getBoundin2.left,
-      top = _ViewerDOM$getBoundin2.top;
-
+function getTouchPosition(touch, boundingRect) {
+  var left = boundingRect.left,
+      top = boundingRect.top;
   var x = touch.clientX - Math.round(left);
   var y = touch.clientY - Math.round(top);
   return {
@@ -85,13 +80,13 @@ function getTouchPosition(touch, ViewerDOM) {
   };
 }
 
-function getNextValue(event, ViewerDOM, tool, value, props, nextValueFn) {
-  var nextValue = event.touches.length === 0 ? (0, _common.set)(value, {
-    mode: value.prePinchMode ? _constants.MODE_IDLE : value.mode,
+function getNextValue(event, boundingRect, matrix, tool, props, mode, prePinchMode, nextValueFn) {
+  var nextValue = event.touches.length === 0 ? {
+    mode: prePinchMode ? _constants.MODE_IDLE : mode,
     prePinchMode: null
-  }) : value;
+  } : {};
   var touch = event.touches.length > 0 ? event.touches[0] : event.changedTouches[0];
-  var touchPosition = getTouchPosition(touch, ViewerDOM);
+  var touchPosition = getTouchPosition(touch, boundingRect);
 
   switch (tool) {
     case _constants.TOOL_ZOOM_OUT:
@@ -100,59 +95,59 @@ function getNextValue(event, ViewerDOM, tool, value, props, nextValueFn) {
     case _constants.TOOL_PAN:
       event.stopPropagation();
       event.preventDefault();
-      return nextValueFn(event, ViewerDOM, tool, nextValue, props, touchPosition);
+      return nextValueFn(event, boundingRect, tool, nextValue, props, touchPosition);
 
     default:
       return nextValue;
   }
 }
 
-function onTouchStart(event, ViewerDOM, tool, value, props) {
+function onTouchStart(event, boundingRect, matrix, tool, props, mode) {
   if (isMultiTouch(event, props)) {
-    return onMultiTouch(event, ViewerDOM, tool, value, props);
+    return onMultiTouch(event, boundingRect, tool, props);
   }
 
   if (event.touches.length !== 1) {
-    if ([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(value.mode) >= 0) {
-      return (0, _common.resetMode)(value);
-    } else if ([_constants.MODE_IDLE].indexOf(value.mode) >= 0) {
-      return value;
+    if ([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(mode) >= 0) {
+      return (0, _common.resetMode)();
+    } else if ([_constants.MODE_IDLE].indexOf(mode) >= 0) {
+      return {};
     }
   }
 
-  return getNextValue(event, ViewerDOM, tool, value, props, _interactions.onMouseDown);
+  return getNextValue(event, boundingRect, tool, props, _interactions.onMouseDown);
 }
 
-function onTouchMove(event, ViewerDOM, tool, value, props) {
+function onTouchMove(event, boundingRect, matrix, tool, props, mode) {
   if (isMultiTouch(event, props)) {
-    return onMultiTouch(event, ViewerDOM, tool, value, props);
+    return onMultiTouch(event, boundingRect, tool, props);
   }
 
-  if (!([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(value.mode) >= 0)) {
-    return value;
+  if (!([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(mode) >= 0)) {
+    return {};
   }
 
-  return getNextValue(event, ViewerDOM, tool, value, props, _interactions.onMouseMove);
+  return getNextValue(event, boundingRect, tool, props, _interactions.onMouseMove);
 }
 
-function onTouchEnd(event, ViewerDOM, tool, value, props) {
-  if (!([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(value.mode) >= 0)) {
-    return value;
+function onTouchEnd(event, boundingRect, matrix, tool, props, mode, pinchPointDistance) {
+  if (!([_constants.MODE_PANNING, _constants.MODE_ZOOMING].indexOf(mode) >= 0)) {
+    return {};
   }
 
-  var nextValue = shouldResetPinchPointDistance(event, value, props) ? (0, _common.set)(value, {
+  var nextValue = shouldResetPinchPointDistance(event, pinchPointDistance, props) ? {
     pinchPointDistance: null
-  }) : value;
+  } : {};
 
   if (event.touches.length > 0) {
     return nextValue;
   }
 
-  return getNextValue(event, ViewerDOM, tool, nextValue, props, _interactions.onMouseUp);
+  return getNextValue(event, boundingRect, tool, nextValue, props, _interactions.onMouseUp);
 }
 
-function onTouchCancel(event, ViewerDOM, tool, value, props) {
+function onTouchCancel(event, boundingRect, tool, props) {
   event.stopPropagation();
   event.preventDefault();
-  return (0, _common.resetMode)(value);
+  return (0, _common.resetMode)();
 }

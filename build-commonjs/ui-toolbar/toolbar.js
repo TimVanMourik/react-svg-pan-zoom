@@ -11,8 +11,6 @@ var _propTypes = _interopRequireDefault(require("prop-types"));
 
 var _constants = require("../constants");
 
-var _zoom = require("../features/zoom");
-
 var _iconCursor = _interopRequireDefault(require("./icon-cursor"));
 
 var _iconPan = _interopRequireDefault(require("./icon-pan"));
@@ -29,10 +27,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function Toolbar(_ref) {
   var tool = _ref.tool,
-      value = _ref.value,
-      onChangeValue = _ref.onChangeValue,
       onChangeTool = _ref.onChangeTool,
       position = _ref.position,
+      fitToViewer = _ref.fitToViewer,
       SVGAlignX = _ref.SVGAlignX,
       SVGAlignY = _ref.SVGAlignY;
 
@@ -43,7 +40,7 @@ function Toolbar(_ref) {
   };
 
   var handleFit = function handleFit(event) {
-    onChangeValue((0, _zoom.fitToViewer)(value, SVGAlignX, SVGAlignY));
+    fitToViewer(SVGAlignX, SVGAlignY);
     event.stopPropagation();
     event.preventDefault();
   };
@@ -113,15 +110,10 @@ function Toolbar(_ref) {
 Toolbar.propTypes = {
   tool: _propTypes.default.string.isRequired,
   onChangeTool: _propTypes.default.func.isRequired,
-  value: _propTypes.default.object.isRequired,
-  onChangeValue: _propTypes.default.func.isRequired,
+  // onChangeValue: PropTypes.func.isRequired,
   //customizations
-  position: _propTypes.default.oneOf([_constants.POSITION_TOP, _constants.POSITION_RIGHT, _constants.POSITION_BOTTOM, _constants.POSITION_LEFT]),
-  SVGAlignX: _propTypes.default.oneOf([_constants.ALIGN_CENTER, _constants.ALIGN_LEFT, _constants.ALIGN_RIGHT]),
-  SVGAlignY: _propTypes.default.oneOf([_constants.ALIGN_CENTER, _constants.ALIGN_TOP, _constants.ALIGN_BOTTOM])
+  position: _propTypes.default.oneOf([_constants.POSITION_TOP, _constants.POSITION_RIGHT, _constants.POSITION_BOTTOM, _constants.POSITION_LEFT])
 };
 Toolbar.defaultProps = {
-  position: _constants.POSITION_RIGHT,
-  SVGAlignX: _constants.ALIGN_LEFT,
-  SVGAlignY: _constants.ALIGN_TOP
+  position: _constants.POSITION_RIGHT
 };

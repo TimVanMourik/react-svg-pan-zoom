@@ -15,7 +15,8 @@ export function tipDeprecateToolbarProps() {
   console.error("HEY! With ReactSVGPanZoom >= 3 the prop toolbarPosition can be specified as key in the toolbarProps object. Please read here ".concat(doc_v2_to_v3));
 }
 export function printMigrationTipsRelatedToProps(props) {
-  if (isNullOrUndefined(props.tool) || isNullOrUndefined(props.value)) tipControlledComponent();
+  if (isNullOrUndefined(props.tool)) tipControlledComponent(); // #TODO mention somethign about 'value' in vrsion 4
+
   if (!isNullOrUndefined(props.miniaturePosition) || !isNullOrUndefined(props.miniatureBackground) || !isNullOrUndefined(props.miniatureWidth) || !isNullOrUndefined(props.miniatureHeight)) tipDeprecatedMiniatureProps();
   if (!isNullOrUndefined(props.toolbarPosition)) tipDeprecateToolbarProps();
 }

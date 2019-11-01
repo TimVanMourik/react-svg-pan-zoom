@@ -1,115 +1,84 @@
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { POSITION_TOP, POSITION_BOTTOM } from '../constants';
 
-var ToolbarButton =
-/*#__PURE__*/
-function (_React$Component) {
-  _inherits(ToolbarButton, _React$Component);
+var ToolbarButton = function ToolbarButton(props) {
+  var _useState = useState(false),
+      _useState2 = _slicedToArray(_useState, 2),
+      hover = _useState2[0],
+      setHover = _useState2[1];
 
-  function ToolbarButton(props) {
-    var _this;
+  function change(event) {
+    event.preventDefault();
+    event.stopPropagation();
 
-    _classCallCheck(this, ToolbarButton);
+    switch (event.type) {
+      case 'mouseenter':
+      case 'touchstart':
+        setHover(true);
+        break;
 
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(ToolbarButton).call(this, props));
-    _this.state = {
-      hover: false
-    };
-    return _this;
+      case 'mouseleave':
+      case 'touchend':
+      case 'touchcancel':
+        setHover(false);
+        break;
+    }
   }
 
-  _createClass(ToolbarButton, [{
-    key: "change",
-    value: function change(event) {
-      event.preventDefault();
-      event.stopPropagation();
+  var title = props.title,
+      name = props.name,
+      active = props.active,
+      toolbarPosition = props.toolbarPosition,
+      onClick = props.onClick,
+      children = props.children;
+  var style = {
+    display: "block",
+    width: "24px",
+    height: "24px",
+    margin: [POSITION_TOP, POSITION_BOTTOM].indexOf(toolbarPosition) >= 0 ? "2px 1px" : "1px 2px",
+    color: active || hover ? '#1CA6FC' : '#FFF',
+    transition: "color 200ms ease",
+    background: "none",
+    padding: "0px",
+    border: "0px",
+    outline: "0px",
+    cursor: "pointer"
+  };
+  return React.createElement("button", {
+    onMouseEnter: function onMouseEnter(e) {
+      return change(e);
+    },
+    onMouseLeave: function onMouseLeave(e) {
+      return change(e);
+    },
+    onTouchStart: function onTouchStart(e) {
+      change(e);
+      onClick(e);
+    },
+    onTouchEnd: function onTouchEnd(e) {
+      return change(e);
+    },
+    onTouchCancel: function onTouchCancel(e) {
+      return change(e);
+    },
+    onClick: onClick,
+    style: style,
+    title: title,
+    name: name,
+    role: "button",
+    type: "button"
+  }, children);
+};
 
-      switch (event.type) {
-        case 'mouseenter':
-        case 'touchstart':
-          this.setState({
-            hover: true
-          });
-          break;
-
-        case 'mouseleave':
-        case 'touchend':
-        case 'touchcancel':
-          this.setState({
-            hover: false
-          });
-          break;
-      }
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _this2 = this;
-
-      var style = {
-        display: "block",
-        width: "24px",
-        height: "24px",
-        margin: [POSITION_TOP, POSITION_BOTTOM].indexOf(this.props.toolbarPosition) >= 0 ? "2px 1px" : "1px 2px",
-        color: this.props.active || this.state.hover ? '#1CA6FC' : '#FFF',
-        transition: "color 200ms ease",
-        background: "none",
-        padding: "0px",
-        border: "0px",
-        outline: "0px",
-        cursor: "pointer"
-      };
-      return React.createElement("button", {
-        onMouseEnter: function onMouseEnter(e) {
-          return _this2.change(e);
-        },
-        onMouseLeave: function onMouseLeave(e) {
-          return _this2.change(e);
-        },
-        onTouchStart: function onTouchStart(e) {
-          _this2.change(e);
-
-          _this2.props.onClick(e);
-        },
-        onTouchEnd: function onTouchEnd(e) {
-          return _this2.change(e);
-        },
-        onTouchCancel: function onTouchCancel(e) {
-          return _this2.change(e);
-        },
-        onClick: this.props.onClick,
-        style: style,
-        title: this.props.title,
-        name: this.props.name,
-        role: "button",
-        type: "button"
-      }, this.props.children);
-    }
-  }]);
-
-  return ToolbarButton;
-}(React.Component);
-
-export { ToolbarButton as default };
 ToolbarButton.propTypes = {
   title: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
@@ -117,3 +86,4 @@ ToolbarButton.propTypes = {
   onClick: PropTypes.func.isRequired,
   active: PropTypes.bool.isRequired
 };
+export default ToolbarButton;

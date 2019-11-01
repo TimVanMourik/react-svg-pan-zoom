@@ -4,7 +4,7 @@ function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArra
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
@@ -19,7 +19,9 @@ var min = Math.min,
 export default function Miniature(props) {
   var _style;
 
-  var value = props.value,
+  var miniatureOpen = props.miniatureOpen,
+      setMiniatureOpen = props.setMiniatureOpen,
+      matrix = props.matrix,
       onChangeValue = props.onChangeValue,
       children = props.children,
       position = props.position,
@@ -27,16 +29,18 @@ export default function Miniature(props) {
       SVGBackground = props.SVGBackground,
       miniatureWidth = props.width,
       miniatureHeight = props.height;
-  var SVGViewBoxX = value.SVGViewBoxX,
-      SVGViewBoxY = value.SVGViewBoxY,
-      SVGWidth = value.SVGWidth,
-      SVGHeight = value.SVGHeight,
-      viewerWidth = value.viewerWidth,
-      viewerHeight = value.viewerHeight;
+  var _props$viewer = props.viewer,
+      viewerWidth = _props$viewer.viewerWidth,
+      viewerHeight = _props$viewer.viewerHeight;
+  var _props$SVGAttributes = props.SVGAttributes,
+      SVGMinX = _props$SVGAttributes.SVGMinX,
+      SVGMinY = _props$SVGAttributes.SVGMinY,
+      SVGWidth = _props$SVGAttributes.SVGWidth,
+      SVGHeight = _props$SVGAttributes.SVGHeight;
   var ratio = SVGHeight / SVGWidth;
   var zoomToFit = ratio >= 1 ? miniatureHeight / SVGHeight : miniatureWidth / SVGWidth;
 
-  var _applyToPoints = applyToPoints(inverse(value), [{
+  var _applyToPoints = applyToPoints(inverse(matrix), [{
     x: 0,
     y: 0
   }, {
@@ -53,7 +57,7 @@ export default function Miniature(props) {
 
   var width, height;
 
-  if (value.miniatureOpen) {
+  if (miniatureOpen) {
     width = miniatureWidth;
     height = miniatureHeight;
   } else {
@@ -70,7 +74,7 @@ export default function Miniature(props) {
     height: height + "px",
     bottom: "6px"
   }, _defineProperty(_style, position === POSITION_LEFT ? 'left' : 'right', "6px"), _defineProperty(_style, "background", background), _style);
-  var centerTranslation = ratio >= 1 ? "translate(".concat((miniatureWidth - SVGWidth * zoomToFit) / 2 - SVGViewBoxX * zoomToFit, ", ").concat(-SVGViewBoxY * zoomToFit, ")") : "translate(".concat(-SVGViewBoxX * zoomToFit, ", ").concat((miniatureHeight - SVGHeight * zoomToFit) / 2 - SVGViewBoxY * zoomToFit, ")");
+  var centerTranslation = ratio >= 1 ? "translate(".concat((miniatureWidth - SVGWidth * zoomToFit) / 2 - SVGMinX * zoomToFit, ", ").concat(-SVGMinY * zoomToFit, ")") : "translate(".concat(-SVGMinX * zoomToFit, ", ").concat((miniatureHeight - SVGHeight * zoomToFit) / 2 - SVGMinY * zoomToFit, ")");
   return React.createElement("div", {
     role: "navigation",
     style: style
@@ -86,29 +90,28 @@ export default function Miniature(props) {
     transform: "scale(".concat(zoomToFit, ", ").concat(zoomToFit, ")")
   }, React.createElement("rect", {
     fill: SVGBackground,
-    x: SVGViewBoxX,
-    y: SVGViewBoxY,
+    x: SVGMinX,
+    y: SVGMinY,
     width: SVGWidth,
     height: SVGHeight
   }), children, React.createElement(MiniatureMask, {
     SVGWidth: SVGWidth,
     SVGHeight: SVGHeight,
-    SVGViewBoxX: SVGViewBoxX,
-    SVGViewBoxY: SVGViewBoxY,
+    SVGMinX: SVGMinX,
+    SVGMinY: SVGMinY,
     x1: x1,
     y1: y1,
     x2: x2,
     y2: y2,
     zoomToFit: zoomToFit
   })))), React.createElement(MiniatureToggleButton, {
-    value: value,
-    onChangeValue: onChangeValue,
+    miniatureOpen: miniatureOpen,
+    setMiniatureOpen: setMiniatureOpen,
     position: position
   }));
 }
 Miniature.propTypes = {
-  value: PropTypes.object.isRequired,
-  onChangeValue: PropTypes.func.isRequired,
+  // onChangeValue: PropTypes.func.isRequired,
   SVGBackground: PropTypes.string.isRequired,
   //customizations
   position: PropTypes.oneOf([POSITION_RIGHT, POSITION_LEFT]),

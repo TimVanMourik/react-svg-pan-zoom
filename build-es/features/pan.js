@@ -8,35 +8,41 @@ function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArra
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-import { ACTION_PAN, MODE_IDLE, MODE_PANNING } from '../constants';
-import { set, getSVGPoint } from './common';
+import { ACTION_PAN, MODE_IDLE, MODE_PANNING, NULL_POSITION } from '../constants';
+import { getSVGPoint } from './common';
 import { fromObject, translate, transform, applyToPoints, inverse } from 'transformation-matrix';
 /**
  *
- * @param value
  * @param SVGDeltaX
  * @param SVGDeltaY
  * @param panLimit
  * @returns {Object}
  */
 
-export function pan(value, SVGDeltaX, SVGDeltaY) {
-  var panLimit = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : undefined;
-  var matrix = transform(fromObject(value), //2
-  translate(SVGDeltaX, SVGDeltaY) //1
+export function pan(initialMatrix, delta, viewer, SVGAttributes) {
+  var panLimit = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : undefined;
+  var matrix = transform(fromObject(initialMatrix), //2
+  translate(delta.x, delta.y) //1
   ); // apply pan limits
 
   if (panLimit) {
+    var viewerWidth = viewer.viewerWidth,
+        viewerHeight = viewer.viewerHeight;
+    var SVGMinX = SVGAttributes.SVGMinX,
+        SVGMinY = SVGAttributes.SVGMinY,
+        SVGWidth = SVGAttributes.SVGWidth,
+        SVGHeight = SVGAttributes.SVGHeight;
+
     var _applyToPoints = applyToPoints(matrix, [{
-      x: value.SVGViewBoxX + panLimit,
-      y: value.SVGViewBoxY + panLimit
+      x: SVGMinX + panLimit,
+      y: SVGMinY + panLimit
     }, {
-      x: value.SVGViewBoxX + value.SVGWidth - panLimit,
-      y: value.SVGViewBoxY + value.SVGHeight - panLimit
+      x: SVGMinX + SVGWidth - panLimit,
+      y: SVGMinY + SVGHeight - panLimit
     }]),
         _applyToPoints2 = _slicedToArray(_applyToPoints, 2),
         _applyToPoints2$ = _applyToPoints2[0],
@@ -48,59 +54,61 @@ export function pan(value, SVGDeltaX, SVGDeltaY) {
 
 
     var moveX = 0;
-    if (value.viewerWidth - x1 < 0) moveX = value.viewerWidth - x1;else if (x2 < 0) moveX = -x2; //y limit
+    if (viewerWidth - x1 < 0) moveX = viewerWidth - x1;else if (x2 < 0) moveX = -x2; //y limit
 
     var moveY = 0;
-    if (value.viewerHeight - y1 < 0) moveY = value.viewerHeight - y1;else if (y2 < 0) moveY = -y2; //apply limits
+    if (viewerHeight - y1 < 0) moveY = viewerHeight - y1;else if (y2 < 0) moveY = -y2; //apply limits
 
     matrix = transform(translate(moveX, moveY), matrix);
   }
 
-  return set(value, _objectSpread({
-    mode: MODE_IDLE
-  }, matrix), ACTION_PAN);
-}
-export function startPanning(value, viewerX, viewerY) {
-  return set(value, {
-    mode: MODE_PANNING,
-    startX: viewerX,
-    startY: viewerY,
-    endX: viewerX,
-    endY: viewerY
-  }, ACTION_PAN);
-}
-export function updatePanning(value, viewerX, viewerY, panLimit) {
-  if (value.mode !== MODE_PANNING) throw new Error('update pan not allowed in this mode ' + value.mode);
-  var endX = value.endX,
-      endY = value.endY;
-  var start = getSVGPoint(value, endX, endY);
-  var end = getSVGPoint(value, viewerX, viewerY);
-  var deltaX = end.x - start.x;
-  var deltaY = end.y - start.y;
-  var nextValue = pan(value, deltaX, deltaY, panLimit);
-  return set(nextValue, {
-    mode: MODE_PANNING,
-    endX: viewerX,
-    endY: viewerY
-  }, ACTION_PAN);
-}
-export function stopPanning(value) {
-  return set(value, {
+  return {
     mode: MODE_IDLE,
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null
-  }, ACTION_PAN);
+    matrix: matrix,
+    lastAction: ACTION_PAN
+  };
 }
-export function autoPanIfNeeded(value, viewerX, viewerY) {
+export function startPanning(viewer) {
+  return {
+    mode: MODE_PANNING,
+    start: viewer,
+    end: viewer,
+    last_action: ACTION_PAN
+  };
+}
+export function updatePanning(cursor, start, end, matrix, panLimit, mode, viewer, SVGAttributes) {
+  if (mode !== MODE_PANNING) throw new Error('update pan not allowed in this mode ' + mode);
+  var startPos = getSVGPoint(end.x, end.y, matrix);
+  var endPos = getSVGPoint(cursor.x, cursor.y, matrix);
+  var delta = {
+    x: endPos.x - startPos.x,
+    y: endPos.y - startPos.y
+  };
+  return _objectSpread({}, pan(matrix, delta, viewer, SVGAttributes, panLimit), {
+    mode: MODE_PANNING,
+    end: cursor,
+    last_action: ACTION_PAN
+  });
+}
+export function stopPanning() {
+  return {
+    mode: MODE_IDLE,
+    start: NULL_POSITION,
+    end: NULL_POSITION,
+    last_action: ACTION_PAN
+  };
+}
+export function autoPanIfNeeded(viewer, pointer, matrix) {
   var deltaX = 0;
   var deltaY = 0;
-  if (viewerY <= 20) deltaY = 2;
-  if (value.viewerWidth - viewerX <= 20) deltaX = -2;
-  if (value.viewerHeight - viewerY <= 20) deltaY = -2;
-  if (viewerX <= 20) deltaX = 2;
-  deltaX = deltaX / value.d;
-  deltaY = deltaY / value.d;
-  return deltaX === 0 && deltaY === 0 ? value : pan(value, deltaX, deltaY);
+  if (pointer.y <= 20) deltaY = 2;
+  if (viewer.viewerWidth - pointer.x <= 20) deltaX = -2;
+  if (viewer.viewerHeight - pointer.y <= 20) deltaY = -2;
+  if (pointer.x <= 20) deltaX = 2;
+  deltaX = deltaX / matrix.d;
+  deltaY = deltaY / matrix.d;
+  return deltaX === 0 && deltaY === 0 ? {} : pan(matrix, {
+    x: deltaX,
+    y: deltaY
+  }, null, viewer);
 }

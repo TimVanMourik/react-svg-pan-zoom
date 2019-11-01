@@ -1,11 +1,10 @@
-import { set } from './common';
-export function openMiniature(value) {
-  return set(value, {
+export function openMiniature() {
+  return {
     miniatureOpen: true
-  });
+  };
 }
-export function closeMiniature(value) {
-  return set(value, {
+export function closeMiniature() {
+  return {
     miniatureOpen: false
-  });
+  };
 }

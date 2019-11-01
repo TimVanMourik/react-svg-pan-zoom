@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.INITIAL_VALUE = exports.ALIGN_BOTTOM = exports.ALIGN_TOP = exports.ALIGN_RIGHT = exports.ALIGN_LEFT = exports.ALIGN_CENTER = exports.ACTION_PAN = exports.ACTION_ZOOM = exports.POSITION_LEFT = exports.POSITION_BOTTOM = exports.POSITION_RIGHT = exports.POSITION_TOP = exports.POSITION_NONE = exports.TOOL_ZOOM_OUT = exports.TOOL_ZOOM_IN = exports.TOOL_PAN = exports.TOOL_NONE = exports.TOOL_AUTO = exports.MODE_ZOOMING = exports.MODE_PANNING = exports.MODE_IDLE = void 0;
+exports.INITIAL_VALUE = exports.NULL_POSITION = exports.ALIGN_BOTTOM = exports.ALIGN_TOP = exports.ALIGN_RIGHT = exports.ALIGN_LEFT = exports.ALIGN_CENTER = exports.ACTION_PAN = exports.ACTION_ZOOM = exports.POSITION_LEFT = exports.POSITION_BOTTOM = exports.POSITION_RIGHT = exports.POSITION_TOP = exports.POSITION_NONE = exports.TOOL_ZOOM_OUT = exports.TOOL_ZOOM_IN = exports.TOOL_PAN = exports.TOOL_NONE = exports.TOOL_AUTO = exports.MODE_ZOOMING = exports.MODE_PANNING = exports.MODE_IDLE = void 0;
 var MODE_IDLE = 'idle';
 exports.MODE_IDLE = MODE_IDLE;
 var MODE_PANNING = 'panning';
@@ -44,5 +44,10 @@ var ALIGN_TOP = 'top';
 exports.ALIGN_TOP = ALIGN_TOP;
 var ALIGN_BOTTOM = 'bottom';
 exports.ALIGN_BOTTOM = ALIGN_BOTTOM;
+var NULL_POSITION = {
+  x: null,
+  y: null
+};
+exports.NULL_POSITION = NULL_POSITION;
 var INITIAL_VALUE = {};
 exports.INITIAL_VALUE = INITIAL_VALUE;
