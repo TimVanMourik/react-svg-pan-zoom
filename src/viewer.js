@@ -1,28 +1,22 @@
-import React from 'react';
+import React, {forwardRef, useState, useEffect, useRef, useImperativeHandle} from 'react';
 import PropTypes from 'prop-types';
-import {toSVG} from 'transformation-matrix';
+import {identity, toSVG} from 'transformation-matrix';
 //events
 import eventFactory from './events/event-factory';
 //features
 import {pan} from './features/pan';
-import {
-  getDefaultValue,
-  isValueValid,
-  reset,
-  setPointOnViewerCenter,
-  setSVGViewBox,
-  setViewerSize,
-  setZoomLevels
-} from './features/common';
+import {reset, setPointOnViewerCenter} from './features/common';
 import {
   onDoubleClick,
-  onInterval,
   onMouseDown,
   onMouseEnterOrLeave,
   onMouseMove,
   onMouseUp,
   onWheel
 } from './features/interactions';
+import parseViewBox from './utils/ViewBoxParser';
+import {isEmpty} from "./utils/is";
+
 import {onTouchCancel, onTouchEnd, onTouchMove, onTouchStart} from './features/interactions-touch';
 
 import {fitSelection, fitToViewer, zoom, zoomOnViewerCenter} from './features/zoom';
@@ -55,173 +49,211 @@ import {
   TOOL_NONE,
   TOOL_PAN,
   TOOL_ZOOM_IN,
-  TOOL_ZOOM_OUT
+  TOOL_ZOOM_OUT,
+  NULL_POSITION
 } from './constants';
 import {printMigrationTipsRelatedToProps} from "./migration-tips";
 
-export default class ReactSVGPanZoom extends React.Component {
+const ReactSVGPanZoom = forwardRef((props, Viewer) => {
+  if (process.env.NODE_ENV !== 'production') {
+    printMigrationTipsRelatedToProps(props)
+  }
+  const {
+    width: viewerWidth,
+    height: viewerHeight,
+    scaleFactorMin,
+    scaleFactorMax,
+    children
+  } = props;
+  const viewer = {viewerWidth, viewerHeight};
 
-  constructor(props, context) {
-    const {value, width: viewerWidth, height: viewerHeight, scaleFactorMin, scaleFactorMax, children} = props;
-    const {withViewBox: SVGViewBox} = children.props;
-    let defaultValue;
-    if (SVGViewBox) {
-      const [SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight] = SVGViewBox.split(' ').map(parseFloat);
-      defaultValue = getDefaultValue(viewerWidth, viewerHeight, SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight, scaleFactorMin, scaleFactorMax)
+  const [autoPanIsRunning, setAutoPanning] = useState(true);
+  const [autoPanHover, setAutoPanHover] = useState(POSITION_NONE);
+  const [tool, setTool] = useState(TOOL_AUTO);
+
+  const [matrix, setMatrix] = useState(identity());
+  const [start, setStart] = useState(NULL_POSITION);
+  const [end, setEnd] = useState(NULL_POSITION);
+
+  const [mode, setMode] = useState(MODE_IDLE);
+  const [focus, setFocus] = useState(false);
+  const [pinchPointDistance, setPinchPointDistance] = useState(null);
+  const [prePinchMode, setPrePinchMode] = useState(null);
+  const [miniatureOpen, setMiniatureOpen] = useState(true);
+  const [lastAction, setLastAction] = useState(null);
+
+  const ViewerDOM = useRef(null);
+  const boundingRect = ViewerDOM.current && ViewerDOM.current.getBoundingClientRect();
+
+  const {viewBox: SVGViewBox} = children.props;
+  const {SVGMinX, SVGMinY, SVGWidth, SVGHeight} = SVGViewBox ? parseViewBox(SVGViewBox) : {
+    SVGHeight: children.props.height,
+    SVGWidth: children.props.width,
+    SVGMinX: 0,
+    SVGMinY: 0
+  };
+  const SVGAttributes = {SVGMinX, SVGMinY, SVGWidth, SVGHeight};
+
+  const hoverBorderRef = useRef()
+  useEffect(() => {
+    hoverBorderRef.current = requestAnimationFrame(() => panOnHover(matrix));
+    return () => cancelAnimationFrame(hoverBorderRef.current);
+  }, [autoPanHover]);
+
+  const panOnHover = (inputMatrix) => {
+    let deltaX = 0;
+    let deltaY = 0;
+    
+    if(autoPanHover === POSITION_NONE){
+      cancelAnimationFrame(hoverBorderRef.current)
     } else {
-      const {width: SVGWidth, height: SVGHeight} = children.props;
-      defaultValue = getDefaultValue(viewerWidth, viewerHeight, 0, 0, SVGWidth, SVGHeight, scaleFactorMin, scaleFactorMax)
-    }
-
-    super(props, context);
-    this.ViewerDOM = null;
-    this.state = {
-      pointerX: null,
-      pointerY: null,
-      defaultValue
-    }
-    this.autoPanLoop = this.autoPanLoop.bind(this);
-
-    if (process.env.NODE_ENV !== 'production') {
-      printMigrationTipsRelatedToProps(props)
-    }
-  }
-
-  /** React hooks **/
-  componentDidUpdate(prevProps) {
-    const value = this.getValue();
-    const props = this.props
-
-    let nextValue = value;
-    let needUpdate = false;
-
-    if (process.env.NODE_ENV !== 'production') {
-      printMigrationTipsRelatedToProps(props)
-    }
-
-    // This block checks the size of the SVG
-    const {withViewBox: SVGViewBox} = props.children.props;
-    if (SVGViewBox) {
-      // if the withViewBox prop is specified
-      const [x, y, width, height] = SVGViewBox.split(' ').map(parseFloat);
-
-      if(value.SVGViewBoxX !== x || value.SVGViewBoxY !== y || value.SVGWidth !== width || value.SVGHeight !== height) {
-        nextValue = setSVGViewBox(nextValue, x, y, width, height);
-        needUpdate = true;
+      switch (autoPanHover) {
+        case POSITION_TOP:
+            deltaY = -2;
+          break;
+    
+        case POSITION_RIGHT:
+            deltaX = 2;
+          break;
+    
+        case POSITION_BOTTOM:
+            deltaY = 2;
+          break;
+    
+        case POSITION_LEFT:
+            deltaX = -2;
+          break;
       }
-    } else {
-      // if the width and height props are specified
-      const {width: SVGWidth, height: SVGHeight} = props.children.props;
-      if (value.SVGWidth !== SVGWidth || value.SVGHeight !== SVGHeight) {
-        nextValue = setSVGViewBox(nextValue, 0, 0, SVGWidth, SVGHeight);
-        needUpdate = true;
-      }
-    }
-
-    // This block checks the size of the viewer
-    if (
-      prevProps.width !== props.width ||
-      prevProps.height !== props.height
-    ) {
-      nextValue = setViewerSize(nextValue, props.width, props.height);
-      needUpdate = true;
-    }
-
-    // This blocks checks the scale factors
-    if (
-      prevProps.scaleFactorMin !== props.scaleFactorMin ||
-      prevProps.scaleFactorMax !== props.scaleFactorMax
-    ) {
-      nextValue = setZoomLevels(nextValue, props.scaleFactorMin, props.scaleFactorMax);
-      needUpdate = true;
-    }
-
-    if (needUpdate) {
-      this.setValue(nextValue);
+      const delta =  {x: deltaX / inputMatrix.d, y: deltaY / inputMatrix.d};
+      const nextValue = pan(inputMatrix, delta, viewer, SVGAttributes, props.preventPanOutside ? 20 : undefined);
+      updateValue(nextValue);
+      hoverBorderRef.current = requestAnimationFrame(() => panOnHover(nextValue.matrix));
     }
   }
 
-  componentDidMount() {
-    this.autoPanIsRunning = true;
-    requestAnimationFrame(this.autoPanLoop);
-  }
-
-  componentWillUnmount() {
-    this.autoPanIsRunning = false;
-  }
-
-  /** ReactSVGPanZoom handlers **/
-  getValue() {
-    if (isValueValid(this.props.value)) return this.props.value
-    return this.state.defaultValue
-  }
-
-  getTool() {
-    if (this.props.tool) return this.props.tool
-    return TOOL_NONE
-  }
-
-  setValue(nextValue) {
-    let {onChangeValue, onZoom, onPan} = this.props;
-
+  // on value change
+  useEffect(() => {
+    let {onChangeValue, onZoom, onPan} = props;
+    const nextValue = getValue();
     if (onChangeValue) onChangeValue(nextValue);
     if (nextValue.lastAction) {
       if (onZoom && nextValue.lastAction === ACTION_ZOOM) onZoom(nextValue);
       if (onPan && nextValue.lastAction === ACTION_PAN) onPan(nextValue);
     }
+  }, [
+    matrix, start, end,
+    mode, focus, pinchPointDistance, prePinchMode, miniatureOpen,
+    lastAction,
+  ]);
+
+  function getValue() {
+    return {
+      //directly from props:
+      viewerWidth,
+      viewerHeight,
+      scaleFactorMin,
+      scaleFactorMax,
+
+      //from child props:
+      SVGAttributes,
+
+      //
+      matrix,
+      start,
+      end,
+
+      //
+      mode,
+      focus,
+      pinchPointDistance,
+      prePinchMode,
+      miniatureOpen,
+      lastAction,
+
+      //
+      version: 3,
+    };
+  }
+
+  function updateValue(nextValue) {
+    const { matrix, start, end, mode, lastAction, miniatureOpen} = nextValue;
+    if('matrix' in nextValue) setMatrix(matrix);
+    if('start' in nextValue) setStart(start);
+    if('end' in nextValue) setEnd(end);
+
+    if('mode' in nextValue) setMode(mode);
+    if('focus' in nextValue) setFocus(focus);
+    if('lastAction' in nextValue) setLastAction(lastAction);
+
+    if('miniatureOpen' in nextValue) setMiniatureOpen(miniatureOpen);
+
+    const { onChangeValue } = props;
+    if(onChangeValue) onChangeValue(getValue());
   }
 
   /** ReactSVGPanZoom methods **/
-  pan(SVGDeltaX, SVGDeltaY) {
-    let nextValue = pan(this.getValue(), SVGDeltaX, SVGDeltaY);
-    this.setValue(nextValue);
-  }
+  useImperativeHandle(Viewer, () => ({
 
-  zoom(SVGPointX, SVGPointY, scaleFactor) {
-    let nextValue = zoom(this.getValue(), SVGPointX, SVGPointY, scaleFactor);
-    this.setValue(nextValue);
-  }
+    pan(SVGDeltaX, SVGDeltaY) {
+      const nextValue = pan(matrix, {x: SVGDeltaX, y: SVGDeltaY}, viewer, SVGAttributes, props.preventPanOutside ? 20 : undefined);
+      updateValue(nextValue);
+    },
 
-  fitSelection(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight) {
-    let nextValue = fitSelection(this.getValue(), selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight);
-    this.setValue(nextValue);
-  }
+    zoom(SVGPointX, SVGPointY, scaleFactor) {
+      const nextValue = zoom(matrix, {x: SVGPointX, y: SVGPointY}, scaleFactor, scaleFactorMin, scaleFactorMax);
+      updateValue(nextValue);
+    },
 
-  fitToViewer(SVGAlignX = ALIGN_LEFT, SVGAlignY = ALIGN_TOP) {
-    let nextValue = fitToViewer(this.getValue(), SVGAlignX, SVGAlignY);
-    this.setValue(nextValue);
-  }
+    fitSelection(selectionSVGPointX, selectionSVGPointY, selectionWidth, selectionHeight) {
+      const nextValue = fitSelection(
+        selectionSVGPointX,
+        selectionSVGPointY,
+        selectionWidth,
+        selectionHeight,
+        viewerWidth,
+        viewerHeight
+      );
+      updateValue(nextValue);
+    },
 
-  zoomOnViewerCenter(scaleFactor) {
-    let nextValue = zoomOnViewerCenter(this.getValue(), scaleFactor);
-    this.setValue(nextValue);
-  }
+    fitToViewer(SVGAlignX = ALIGN_LEFT, SVGAlignY = ALIGN_TOP) {
+      const nextValue = fitToViewer(viewer, SVGAttributes, SVGAlignX, SVGAlignY);
+      updateValue(nextValue);
+    },
 
-  setPointOnViewerCenter(SVGPointX, SVGPointY, zoomLevel) {
-    let nextValue = setPointOnViewerCenter(this.getValue(), SVGPointX, SVGPointY, zoomLevel);
-    this.setValue(nextValue);
-  }
+    zoomOnViewerCenter(scaleFactor) {
+      const nextValue = zoomOnViewerCenter(matrix, viewer, scaleFactor, scaleFactorMin, scaleFactorMax);
+      updateValue(nextValue);
+    },
 
-  reset() {
-    let nextValue = reset(this.getValue());
-    this.setValue(nextValue);
-  }
+    setPointOnViewerCenter(SVGPointX, SVGPointY, zoomLevel) {
+      const nextValue = setPointOnViewerCenter(viewerWidth, viewerHeight, SVGPointX, SVGPointY, zoomLevel);
+      updateValue(nextValue);
+    },
 
-  openMiniature() {
-    let nextValue = openMiniature(this.getValue());
-    this.setValue(nextValue);
-  }
+    reset() {
+      const nextValue = reset();
+      updateValue(nextValue);
+    },
 
-  closeMiniature() {
-    let nextValue = closeMiniature(this.getValue());
-    this.setValue(nextValue);
-  }
+    openMiniature() {
+      const nextValue = openMiniature();
+      updateValue(nextValue);
+    },
+
+    closeMiniature() {
+      const nextValue = closeMiniature();
+      updateValue(nextValue);
+    },
+
+    changeTool(tool) {
+      setTool(tool);
+    }
+  }));
 
   /** ReactSVGPanZoom internals **/
-  handleViewerEvent(event) {
-    let {props, ViewerDOM} = this;
-
-    if (!([TOOL_NONE, TOOL_AUTO].indexOf(this.getTool()) >= 0)) return;
+  function handleViewerEvent(event) {
+    if (!([TOOL_NONE, TOOL_AUTO].indexOf(tool) >= 0)) return;
     if (event.target === ViewerDOM) return;
 
     let eventsHandler = {
@@ -238,205 +270,182 @@ export default class ReactSVGPanZoom extends React.Component {
       touchcancel: props.onTouchCancel,
     };
 
-    let onEventHandler = eventsHandler[event.type];
+    const onEventHandler = eventsHandler[event.type];
     if (!onEventHandler) return;
 
-    onEventHandler(eventFactory(event, props.value, ViewerDOM));
-  }
-
-  autoPanLoop() {
-    let coords = {x: this.state.pointerX, y: this.state.pointerY};
-    let nextValue = onInterval(null, this.ViewerDOM, this.getTool(), this.getValue(), this.props, coords);
-    if (this.getValue() !== nextValue) {
-      this.setValue(nextValue);
-    }
-
-    if (this.autoPanIsRunning) {
-      requestAnimationFrame(this.autoPanLoop);
-    }
+    onEventHandler(eventFactory(event, matrix, boundingRect));
   }
 
   /** React renderer **/
-  render() {
-    let {props, state: {pointerX, pointerY}} = this;
-    let tool = this.getTool();
-    let value = this.getValue();
-    let {customToolbar: CustomToolbar, customMiniature: CustomMiniature} = props;
+  let {customToolbar: CustomToolbar, customMiniature: CustomMiniature} = props;
 
-    let panningWithToolAuto = tool === TOOL_AUTO
-      && value.mode === MODE_PANNING
-      && value.startX !== value.endX
-      && value.startY !== value.endY;
+  let panningWithToolAuto = tool === TOOL_AUTO
+    && mode === MODE_PANNING
+    && start.x !== end.x
+    && start.y !== end.y;
 
-    let cursor;
+  let cursor;
 
-    if (tool === TOOL_PAN)
-      cursor = cursorPolyfill(value.mode === MODE_PANNING ? 'grabbing' : 'grab');
+  if (tool === TOOL_PAN)
+    cursor = cursorPolyfill(mode === MODE_PANNING ? 'grabbing' : 'grab');
 
-    if (tool === TOOL_ZOOM_IN)
-      cursor = cursorPolyfill('zoom-in');
+  if (tool === TOOL_ZOOM_IN)
+    cursor = cursorPolyfill('zoom-in');
 
-    if (tool === TOOL_ZOOM_OUT)
-      cursor = cursorPolyfill('zoom-out');
+  if (tool === TOOL_ZOOM_OUT)
+    cursor = cursorPolyfill('zoom-out');
 
-    if (panningWithToolAuto)
-      cursor = cursorPolyfill('grabbing');
+  if (panningWithToolAuto)
+    cursor = cursorPolyfill('grabbing');
 
-    let blockChildEvents = [TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT].indexOf(tool) >= 0;
-    blockChildEvents = blockChildEvents || panningWithToolAuto;
+  let blockChildEvents = [TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT].indexOf(tool) >= 0;
+  blockChildEvents = blockChildEvents || panningWithToolAuto;
 
-    const touchAction = (this.props.detectPinchGesture || [TOOL_PAN, TOOL_AUTO].indexOf(this.getTool()) !== -1) ? 'none' : undefined
+  const touchAction = (props.detectPinchGesture || [TOOL_PAN, TOOL_AUTO].indexOf(tool) !== -1) ? 'none' : undefined
 
-    const style = {display: 'block', cursor, touchAction};
+  const style = {display: 'block', cursor, touchAction};
+  return (
+    <div
+      style={{position: "relative", width: viewerWidth, height: viewerHeight, ...props.style}}
+      className={props.className}>
+      <svg
+        ref={ViewerDOM}
+        width={viewerWidth}
+        height={viewerHeight}
+        style={style}
 
-    return (
-      <div
-        style={{position: "relative", width: value.viewerWidth, height: value.viewerHeight, ...props.style}}
-        className={this.props.className}>
-        <svg
-          ref={ViewerDOM => this.ViewerDOM = ViewerDOM}
-          width={value.viewerWidth}
-          height={value.viewerHeight}
-          style={style}
+        onMouseDown={event => {
+          const nextValue = onMouseDown(event, boundingRect, matrix, tool, props, mode);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
 
-          onMouseDown={event => {
-            let nextValue = onMouseDown(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-            this.handleViewerEvent(event);
-          }}
-          onMouseMove={event => {
-            let {left, top} = this.ViewerDOM.getBoundingClientRect();
-            let x = event.clientX - Math.round(left);
-            let y = event.clientY - Math.round(top);
+          handleViewerEvent(event);
+        }}
+        onMouseMove={event => {
+          const nextValue = onMouseMove(event, boundingRect, matrix, tool, props, mode, start, end, viewer, SVGAttributes);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
+          handleViewerEvent(event);
+        }}
+        onMouseUp={event => {
+          const nextValue = onMouseUp(event, boundingRect, matrix, tool, props, mode, start, end, viewer);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
+          handleViewerEvent(event);
+        }}
 
-            let nextValue = onMouseMove(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props, {x, y});
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-            this.setState({pointerX: x, pointerY: y});
-            this.handleViewerEvent(event);
-          }}
-          onMouseUp={event => {
-            let nextValue = onMouseUp(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-            this.handleViewerEvent(event);
-          }}
+        onClick={event => {
+          handleViewerEvent(event)
+        }}
+        onDoubleClick={event => {
+          const nextValue = onDoubleClick(event, boundingRect, matrix, tool, props, mode);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
+          handleViewerEvent(event);
+        }}
 
-          onClick={event => {
-            this.handleViewerEvent(event)
-          }}
-          onDoubleClick={event => {
-            let nextValue = onDoubleClick(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-            this.handleViewerEvent(event);
-          }}
+        onWheel={event => {
+          const nextValue = onWheel(event, boundingRect, matrix, tool, props, mode);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
+        }}
 
-          onWheel={event => {
-            let nextValue = onWheel(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-          }}
+        onMouseEnter={event => {
+          if (detectTouch()) return;
+          const nextValue = onMouseEnterOrLeave(event, boundingRect, matrix, tool, props, mode);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
+        }}
+        onMouseLeave={event => {
+          const nextValue = onMouseEnterOrLeave(event, boundingRect, matrix, tool, props, mode);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
+        }}
 
-          onMouseEnter={event => {
-            if (detectTouch()) return;
-            let nextValue = onMouseEnterOrLeave(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-          }}
-          onMouseLeave={event => {
-            let nextValue = onMouseEnterOrLeave(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-          }}
+        onTouchStart={event => {
+          const nextValue = onTouchStart(event, boundingRect, matrix, tool, props, mode);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
+          handleViewerEvent(event);
+        }}
+        onTouchMove={event => {
+          const nextValue = onTouchMove(event, boundingRect, matrix, tool, props, mode);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
+          handleViewerEvent(event);
+        }}
+        onTouchEnd={event => {
+          const nextValue = onTouchEnd(event, boundingRect, matrix, tool, props, mode);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
+          handleViewerEvent(event);
+        }}
+        onTouchCancel={event => {
+          const nextValue = onTouchCancel(event, boundingRect, tool,  props, mode);
+          if (!isEmpty(nextValue)) updateValue(nextValue);
+          handleViewerEvent(event);
+        }}>
 
-          onTouchStart={event => {
-            let nextValue = onTouchStart(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-            this.handleViewerEvent(event);
-          }}
-          onTouchMove={event => {
-            let nextValue = onTouchMove(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-            this.handleViewerEvent(event);
-          }}
-          onTouchEnd={event => {
-            let nextValue = onTouchEnd(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-            this.handleViewerEvent(event);
-          }}
-          onTouchCancel={event => {
-            let nextValue = onTouchCancel(event, this.ViewerDOM, this.getTool(), this.getValue(), this.props);
-            if (this.getValue() !== nextValue) this.setValue(nextValue);
-            this.handleViewerEvent(event);
-          }}>
+        <rect
+          fill={props.background}
+          x={0}
+          y={0}
+          width={viewerWidth}
+          height={viewerHeight}
+          style={{pointerEvents: "none"}}
+        />
 
+        <g
+          transform={toSVG(matrix)}
+          style={blockChildEvents ? {pointerEvents: "none"} : {}}>
           <rect
-            fill={props.background}
-            x={0}
-            y={0}
-            width={value.viewerWidth}
-            height={value.viewerHeight}
-            style={{pointerEvents: "none"}}
-          />
-
-          <g
-            transform={toSVG(value)}
-            style={blockChildEvents ? {pointerEvents: "none"} : {}}>
-            <rect
-              fill={this.props.SVGBackground}
-              style={this.props.SVGStyle}
-              x={value.SVGViewBoxX || 0}
-              y={value.SVGViewBoxY || 0}
-              width={value.SVGWidth}
-              height={value.SVGHeight}/>
-            <g>
-              {props.children.props.children}
-            </g>
+            fill={props.SVGBackground}
+            style={props.SVGStyle}
+            x={SVGMinX || 0}
+            y={SVGMinY || 0}
+            width={SVGWidth}
+            height={SVGHeight}/>
+          <g>
+            {children.props.children}
           </g>
+        </g>
+        
 
-          {!([TOOL_NONE, TOOL_AUTO].indexOf(tool) >= 0 && props.detectAutoPan && value.focus) ? null : (
-            <g style={{pointerEvents: "none"}}>
-              {!(pointerY <= 20) ? null :
-                <BorderGradient direction={POSITION_TOP} width={value.viewerWidth} height={value.viewerHeight}/>
-              }
+        {!([TOOL_NONE, TOOL_AUTO].indexOf(tool) >= 0 && props.detectAutoPan) ? null : (
+          <g>
+            <BorderGradient direction={POSITION_TOP} width={viewerWidth} height={viewerHeight} setAutoPanHover={setAutoPanHover}/>
+            <BorderGradient direction={POSITION_RIGHT} width={viewerWidth} height={viewerHeight} setAutoPanHover={setAutoPanHover}/>
+            <BorderGradient direction={POSITION_BOTTOM} width={viewerWidth} height={viewerHeight} setAutoPanHover={setAutoPanHover}/>
+            <BorderGradient direction={POSITION_LEFT} width={viewerWidth} height={viewerHeight} setAutoPanHover={setAutoPanHover}/>
+          </g>
+        )}
 
-              {!(value.viewerWidth - pointerX <= 20) ? null :
-                <BorderGradient direction={POSITION_RIGHT} width={value.viewerWidth} height={value.viewerHeight}/>
-              }
-
-              {!(value.viewerHeight - pointerY <= 20) ? null :
-                <BorderGradient direction={POSITION_BOTTOM} width={value.viewerWidth} height={value.viewerHeight}/>
-              }
-
-              {!(value.focus && pointerX <= 20) ? null :
-                <BorderGradient direction={POSITION_LEFT} width={value.viewerWidth} height={value.viewerHeight}/>
-              }
-            </g>
-          )}
-
-          {!(value.mode === MODE_ZOOMING) ? null :
-            <Selection startX={value.startX} startY={value.startY} endX={value.endX} endY={value.endY}/>
-          }
-        </svg>
-
-        {props.toolbarProps.position === POSITION_NONE ? null :
-          <CustomToolbar
-            {...this.props.toolbarProps}
-            value={value}
-            onChangeValue={value => this.setValue(value)}
-            tool={tool}
-            onChangeTool={tool => this.props.onChangeTool(tool)}
-          />}
-
-        {props.miniatureProps.position === POSITION_NONE ? null :
-          <CustomMiniature
-            {...this.props.miniatureProps}
-            value={value}
-            onChangeValue={value => this.setValue(value)}
-            SVGBackground={this.props.SVGBackground}
-          >
-            {props.children.props.children}
-          </CustomMiniature>
+        {!(mode === MODE_ZOOMING) ? null :
+          <Selection startX={start.x} startY={start.y} endX={end.x} endY={end.y}/>
         }
-      </div>
-    );
-  }
-}
+      </svg>
+      
+      
+      {props.toolbarProps.position === POSITION_NONE ? null :
+        <CustomToolbar
+          {...props.toolbarProps}
+          fitToViewer={(SVGAlignX, SVGAlignY) => updateValue(fitToViewer(viewer, SVGAttributes, SVGAlignX, SVGAlignY))}
+          tool={tool}
+          onChangeTool={tool => {
+            setTool(tool);
+            const { onChangeTool } = props;
+            if(onChangeTool) onChangeTool(tool);
+          }}
+        />}
+
+      {props.miniatureProps.position === POSITION_NONE ? null :
+        <CustomMiniature
+          viewer={viewer}
+          SVGAttributes={SVGAttributes}
+          miniatureOpen={miniatureOpen}
+          setMiniatureOpen={setMiniatureOpen}
+          matrix={matrix}
+          {...props.miniatureProps}
+          // value={value}
+          // onChangeValue={value => updateValue(value)}
+          SVGBackground={props.SVGBackground}
+        >
+          {props.children.props.children}
+        </CustomMiniature>
+      }
+    </div>
+  );
+});
 
 ReactSVGPanZoom.propTypes = {
   /**************************************************************************/
@@ -448,41 +457,14 @@ ReactSVGPanZoom.propTypes = {
   //height of the viewer displayed on screen
   height: PropTypes.number.isRequired,
 
-  //value of the viewer (current camera view)
-  value: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.shape({
-      version: PropTypes.oneOf([2]).isRequired,
-      mode: PropTypes.oneOf([MODE_IDLE, MODE_PANNING, MODE_ZOOMING]).isRequired,
-      focus: PropTypes.bool.isRequired,
-      a: PropTypes.number.isRequired,
-      b: PropTypes.number.isRequired,
-      c: PropTypes.number.isRequired,
-      d: PropTypes.number.isRequired,
-      e: PropTypes.number.isRequired,
-      f: PropTypes.number.isRequired,
-      viewerWidth: PropTypes.number.isRequired,
-      viewerHeight: PropTypes.number.isRequired,
-      SVGViewBoxX: PropTypes.number.isRequired,
-      SVGViewBoxY: PropTypes.number.isRequired,
-      SVGWidth: PropTypes.number.isRequired,
-      SVGHeight: PropTypes.number.isRequired,
-      startX: PropTypes.number,
-      startY: PropTypes.number,
-      endX: PropTypes.number,
-      endY: PropTypes.number,
-      miniatureOpen: PropTypes.bool.isRequired,
-    })
-  ]).isRequired,
-
   //handler something changed
-  onChangeValue: PropTypes.func.isRequired,
+  onChangeValue: PropTypes.func,
 
   //current active tool (TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT)
   tool: PropTypes.oneOf([TOOL_AUTO, TOOL_NONE, TOOL_PAN, TOOL_ZOOM_IN, TOOL_ZOOM_OUT]).isRequired,
 
   //handler tool changed
-  onChangeTool: PropTypes.func.isRequired,
+  onChangeTool: PropTypes.func,
 
   /**************************************************************************/
   /* Customize style                                                        */
@@ -614,9 +596,9 @@ ReactSVGPanZoom.propTypes = {
     }
     if (
       (!prop.props.hasOwnProperty('width') || !prop.props.hasOwnProperty('height')) &&
-      (!prop.props.hasOwnProperty('withViewBox'))
+      (!prop.props.hasOwnProperty('viewBox'))
     ) {
-      return new Error('SVG should have props `width` and `height` or `withViewBox`');
+      return new Error('SVG should have props `width` and `height` or `viewBox`');
     }
 
   }
@@ -642,3 +624,5 @@ ReactSVGPanZoom.defaultProps = {
   customMiniature: Miniature,
   miniatureProps: {},
 };
+
+export default ReactSVGPanZoom;

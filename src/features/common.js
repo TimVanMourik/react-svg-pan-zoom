@@ -1,4 +1,4 @@
-import {TOOL_NONE, MODE_IDLE} from '../constants';
+import {TOOL_NONE, MODE_IDLE, NULL_POSITION} from '../constants';
 import {
   identity,
   fromObject,
@@ -10,78 +10,35 @@ import {
 } from 'transformation-matrix';
 
 /**
- * Obtain default value
- * @returns {Object}
+ * Export x,y coords relative to SVG
+ * @param x
+ * @param y
+ * @param matrix
+ * @returns {*|{x, y}|{x: number, y: number}}
  */
-export function getDefaultValue(viewerWidth, viewerHeight, SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight, scaleFactorMin, scaleFactorMax) {
-  return set({}, {
-    ...identity(),
-    version: 2,
-    mode: MODE_IDLE,
-    focus: false,
-    pinchPointDistance: null,
-    prePinchMode: null,
-    viewerWidth,
-    viewerHeight,
-    SVGViewBoxX,
-    SVGViewBoxY,
-    SVGWidth,
-    SVGHeight,
-    scaleFactorMin,
-    scaleFactorMax,
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null,
-    miniatureOpen: true,
-    lastAction: null,
-  });
-}
-
-/**
- * Change value
- * @param value
- * @param change
- * @param action
- * @returns {Object}
- */
-export function set(value, change, action = null) {
-  value = Object.assign({}, value, change, {lastAction: action});
-  return Object.freeze(value);
-}
-
-/**
- * value valid check
- * @param value
- */
-export function isValueValid(value) {
-  return value !== null
-    && typeof value === 'object'
-    && value.hasOwnProperty('version');
+export function getSVGPoint(x, y, matrix = identity()) {
+  return applyToPoint(inverse(matrix), {x, y});
 }
 
 /**
  * Export x,y coords relative to SVG
- * @param value
- * @param viewerX
- * @param viewerY
+ * @param event
+ * @param boundingRect
  * @returns {*|{x, y}|{x: number, y: number}}
  */
-export function getSVGPoint(value, viewerX, viewerY) {
-  let matrix = fromObject(value);
-
-  let inverseMatrix = inverse(matrix);
-  return applyToPoint(inverseMatrix, {x: viewerX, y: viewerY});
+export function getCursorPosition(event, boundingRect) {
+    const {left, top} = boundingRect;
+    const x = event.clientX - Math.round(left);
+    const y = event.clientY - Math.round(top);
+    return {x, y}
 }
 
 /**
- * Decompose matrix from value
- * @param value
+ * Decompose matrix to scale and translate
+ * @param matrix
  * @returns {{scaleFactor: number, translationX: number, translationY: number}}
  */
-export function decompose(value) {
-  let matrix = fromObject(value);
-
+export function decompose(matrix) {
   return {
     scaleFactor: matrix.a,
     translationX: matrix.e,
@@ -90,62 +47,14 @@ export function decompose(value) {
 }
 
 /**
- *
- * @param value
- * @param focus
- * @returns {Object}
- */
-export function setFocus(value, focus) {
-  return set(value, {focus});
-}
-
-
-/**
- *
- * @param value
  * @param viewerWidth
  * @param viewerHeight
- * @returns {Object}
- */
-export function setViewerSize(value, viewerWidth, viewerHeight) {
-  return set(value, {viewerWidth, viewerHeight});
-}
-
-/**
- *
- * @param value
- * @param SVGViewBoxX
- * @param SVGViewBoxY
- * @param SVGWidth
- * @param SVGHeight
- * @returns {Object}
- */
-export function setSVGViewBox(value, SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight) {
-  return set(value, {SVGViewBoxX, SVGViewBoxY, SVGWidth, SVGHeight});
-}
-
-/**
- *
- * @param value
- * @param scaleFactorMin
- * @param scaleFactorMax
- * @returns {Object}
- */
-export function setZoomLevels(value, scaleFactorMin, scaleFactorMax) {
-  return set(value, {scaleFactorMin, scaleFactorMax});
-}
-
-/**
- *
- * @param value
  * @param SVGPointX
  * @param SVGPointY
  * @param zoomLevel
  * @returns {Object}
  */
-export function setPointOnViewerCenter(value, SVGPointX, SVGPointY, zoomLevel) {
-  let {viewerWidth, viewerHeight} = value;
-
+export function setPointOnViewerCenter(viewerWidth, viewerHeight, SVGPointX, SVGPointY, zoomLevel) {
   let matrix = transform(
     translate(-SVGPointX + viewerWidth / 2, -SVGPointY + viewerHeight / 2),   //4
     translate(SVGPointX, SVGPointY),                                          //3
@@ -153,35 +62,31 @@ export function setPointOnViewerCenter(value, SVGPointX, SVGPointY, zoomLevel) {
     translate(-SVGPointX, -SVGPointY)                                         //1
   );
 
-  return set(value, {
+  return {
     mode: MODE_IDLE,
-    ...matrix,
-  });
+    matrix,
+  };
 }
 
 /**
  *
- * @param value
  * @returns {Object}
  */
-export function reset(value) {
-  return set(value, {
+export function reset() {
+  return {
     mode: MODE_IDLE,
-    ...identity()
-  });
+    matrix: identity()
+  };
 }
 
 /**
  *
- * @param value
  * @returns {Object}
  */
-export function resetMode(value) {
-  return set(value, {
+export function resetMode() {
+  return {
     mode: MODE_IDLE,
-    startX: null,
-    startY: null,
-    endX: null,
-    endY: null
-  })
+    start: NULL_POSITION,
+    end: NULL_POSITION,
+  }
 }
